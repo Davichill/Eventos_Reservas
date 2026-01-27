@@ -1,0 +1,190 @@
+/* Variables de diseño */
+:root {
+    --primary: #001f3f;
+    --primary-light: #003366;
+    --accent: #d4af37;
+    --success: #2e7d32;
+    --bg-page: #f8fafc;
+    --white: #ffffff;
+    --text-dark: #1e293b;
+    --border: #e2e8f0;
+}
+
+body {
+    background-color: var(--bg-page);
+    color: var(--text-dark);
+    font-family: 'Inter', system-ui, sans-serif;
+    margin: 0;
+}
+
+/* Header Estilizado */
+header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    color: var(--white);
+    padding: 1.5rem 5%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+}
+
+header h1 {
+    font-size: 1.2rem;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Contenedor principal */
+.invitacion-container {
+    max-width: 750px;
+    margin: 40px auto;
+    background: var(--white);
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+}
+
+/* Caja de éxito (Enlace generado) */
+.success-box {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    padding: 25px;
+    margin-bottom: 35px;
+    border-radius: 12px;
+    text-align: center;
+    animation: slideDown 0.4s ease-out;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.success-box p {
+    color: var(--success);
+    margin: 0 0 15px 0;
+    font-weight: 600;
+}
+
+.input-copy-group {
+    display: flex;
+    gap: 10px;
+    background: white;
+    padding: 5px;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+}
+
+.input-copy {
+    flex: 1;
+    border: none;
+    padding: 10px;
+    font-family: monospace;
+    font-size: 0.9rem;
+    color: #475569;
+    outline: none;
+}
+
+.btn-copy {
+    background: var(--success);
+    color: white;
+    border: none;
+    padding: 0 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.2s;
+}
+
+.btn-copy:hover {
+    background: #1b5e20;
+}
+
+/* Estilo del Formulario */
+h2 {
+    font-size: 1rem;
+    color: var(--primary);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+h2::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 18px;
+    background: var(--accent);
+    border-radius: 10px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.field-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+input, select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    box-sizing: border-box;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+}
+
+input:focus, select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(0, 31, 63, 0.1);
+}
+
+/* Botón de envío */
+.btn-submit {
+    width: 100%;
+    background: var(--primary);
+    color: white;
+    padding: 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.btn-submit:hover {
+    background: var(--primary-light);
+    transform: translateY(-2px);
+}
+
+.btn-back {
+    color: white;
+    text-decoration: none;
+    font-size: 0.8rem;
+    border: 1px solid rgba(255,255,255,0.4);
+    padding: 8px 15px;
+    border-radius: 6px;
+}
+
+@media (max-width: 600px) {
+    .form-row { grid-template-columns: 1fr; }
+    .invitacion-container { margin: 10px; padding: 20px; }
+}

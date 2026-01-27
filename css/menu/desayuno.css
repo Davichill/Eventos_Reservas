@@ -1,0 +1,104 @@
+/* Layout principal: 2 columnas */
+.layout-gestion-menu {
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+    padding: 20px;
+}
+
+/* Columna Izquierda: Listado de Cards */
+.columna-seleccion {
+    flex: 1;
+    /* Toma el espacio necesario */
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+/* Columna Derecha: El Visor Fijo */
+.columna-visor {
+    width: 350px;
+    position: sticky;
+    top: 20px;
+    background: #f8f9fa;
+    border: 2px dashed #ccc;
+    border-radius: 15px;
+    padding: 20px;
+    min-height: 450px;
+    display: grid;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+/* Estilos de la Card */
+.opcion-card {
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 20px;
+    background: #ffffff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.opcion-card:hover {
+    border-color: #d35400;
+    background: #fff9f5;
+    transform: translateY(-2px);
+}
+
+.opcion-card.seleccionada {
+    border-color: #d35400;
+    background-color: #fff9f5;
+    box-shadow: 0 4px 12px rgba(211, 84, 0, 0.1);
+}
+
+.titulo-desayuno {
+    font-weight: bold;
+    color: #2c3e50;
+    margin-left: 10px;
+}
+
+.detalle-lista-menu {
+    margin: 15px 0 0 25px;
+    padding: 0;
+    list-style: none;
+    font-size: 0.85em;
+    color: #666;
+}
+
+.detalle-lista-menu li {
+    margin-bottom: 4px;
+    position: relative;
+}
+
+.detalle-lista-menu li::before {
+    content: "•";
+    color: #d35400;
+    position: absolute;
+    left: -15px;
+}
+
+/* Estilos del Visor de Imagen */
+#visor-imagen-fixed {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    display: none;
+    /* Se muestra solo al hacer hover */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    margin-bottom: 15px;
+}
+
+#texto-placeholder {
+    color: #999;
+    font-style: italic;
+}
+
+#nombre-preview {
+    font-weight: bold;
+    color: #d35400;
+    margin-top: 10px;
+    display: none;
+}
