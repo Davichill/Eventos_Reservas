@@ -42,29 +42,96 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
+
+
 function verDetalle(d) {
     datosActuales = d;
 
     // Llenar modal de visualización
-    document.getElementById('m-razon').innerText = d.razon_social || d.cliente_nombre || 'N/A';
-    document.getElementById('m-ruc').innerText = d.identificacion || 'N/A';
-    document.getElementById('m-representante').innerText = d.representante_legal || 'N/A';
-    document.getElementById('m-direccion').innerText = d.direccion_fiscal || 'N/A';
-    document.getElementById('m-correo-f').innerText = d.correo_facturacion || 'N/A';
+    document.getElementById('m-razon').innerText = d.razon_social || d.cliente_nombre || '—';
+    document.getElementById('m-ruc').innerText = d.identificacion || '—';
+    document.getElementById('m-representante').innerText = d.representante_legal || '—';
+    document.getElementById('m-direccion').innerText = d.direccion_fiscal || '—';
+    document.getElementById('m-correo-f').innerText = d.correo_facturacion || '—';
 
-    let firmaTexto = 'No especificado';
-    if (d.firma_nombre && d.firma_nombre !== 'null' && d.firma_nombre !== 'NULL') {
-        firmaTexto = d.firma_nombre;
-        if (d.firma_identificacion && d.firma_identificacion !== 'null' && d.firma_identificacion !== 'NULL') {
-            firmaTexto += " (" + d.firma_identificacion + ")";
-        }
-    } else if (d.cliente_nombre) {
-        firmaTexto = d.cliente_nombre + " (automático)";
+    // --- CORRECCIÓN: MEJOR MANEJO DE DATOS DE MENÚ ---
+    const menuContainer = document.getElementById('m-menu-final');
+
+    // 1. Determinar título del menú (evitar "NO ESPECIFICADO")
+    let paquete = '';
+    const menuOpcion = limpiarTexto(d.menu_opcion);
+    const eventoTipo = limpiarTexto(d.evento_tipo);
+
+    if (menuOpcion) {
+        paquete = menuOpcion;
+    } else if (eventoTipo) {
+        paquete = eventoTipo;
+    } else {
+        paquete = 'Propuesta Gastronómica';
     }
 
-    const firmaElement = document.getElementById('m-firma');
-    if (firmaElement) firmaElement.innerText = firmaTexto;
+    // 2. Obtener y limpiar lista de platos
+    let platosRaw = '';
 
+    // Prioridad 1: Datos detallados de la tabla reserva_detalles_menu
+    if (d.platos_lista_db && d.platos_lista_db.trim() !== '') {
+        platosRaw = d.platos_lista_db;
+    }
+    // Prioridad 2: Campo texto plano (backup)
+    else if (d.platos_lista && d.platos_lista.trim() !== '') {
+        platosRaw = d.platos_lista;
+    }
+
+    let html = `<div style="font-weight:bold; color:var(--primary); font-size:1.1rem; margin-bottom:8px; text-transform:uppercase;">${paquete}</div>`;
+
+    if (platosRaw && platosRaw !== "null" && platosRaw.trim() !== '') {
+        // Separar, limpiar y eliminar duplicados
+        let items = platosRaw.split('||')
+            .map(item => item.trim())
+            .filter(item => {
+                // Filtrar: no vacío, no "null", no "no especificado"
+                return item !== '' &&
+                    item !== 'null' &&
+                    !item.toLowerCase().includes('no especificado') &&
+                    !item.toLowerCase().includes('pendiente');
+            });
+
+        // Eliminar duplicados manteniendo orden
+        items = [...new Set(items)];
+
+        if (items.length > 0) {
+            // Calcular columnas según cantidad (máximo 2 columnas)
+            const cols = items.length <= 3 ? 1 : 2;
+            html += `<ul style="display:grid; grid-template-columns: repeat(${cols}, 1fr); gap:5px 20px; list-style-type: disc; padding-left:20px;">`;
+            items.forEach(item => {
+                html += `<li style="font-size:0.95rem;">${item}</li>`;
+            });
+            html += `</ul>`;
+        } else {
+            html += `<em style="color:#999; font-size:0.9rem; display:block; margin-top:8px;">Selección de platos pendiente</em>`;
+        }
+    } else {
+        html += `<em style="color:#999; font-size:0.9rem; display:block; margin-top:8px;">Selección de platos pendiente</em>`;
+    }
+
+    menuContainer.innerHTML = html;
+
+    // Resto del código...
+    document.getElementById('m-horario').innerText = formatHorario(d.hora_inicio, d.hora_fin);
+    document.getElementById('m-evento-pax').innerText = formatEventoPax(d.evento, d.cantidad_personas);
+    document.getElementById('m-montaje').innerText = formatMontaje(d.mesa_nombre, d.manteleria);
+    document.getElementById('m-servilleta').innerText = limpiarTexto(d.color_servilleta) || "—";
+    document.getElementById('m-it-log').innerText = formatITLog(d.equipos_audiovisuales, d.logistica);
+    document.getElementById('m-observaciones').innerText = limpiarTexto(d.observaciones) || "Sin observaciones";
+
+    // Firma del contrato
+    const firmaElement = document.getElementById('m-firma');
+    if (firmaElement) {
+        const firmaTexto = formatFirma(d.firma_nombre, d.firma_identificacion, d.cliente_nombre);
+        firmaElement.innerText = firmaTexto;
+    }
+
+    // Fecha del evento
     if (d.fecha_evento) {
         const fecha = new Date(d.fecha_evento);
         const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
@@ -72,33 +139,10 @@ function verDetalle(d) {
         document.getElementById('m-fecha-evento').innerText = fechaFormateada;
     }
 
-    document.getElementById('m-cliente').innerText = d.cliente_nombre + " (" + (d.cliente_telefono || 'N/A') + ")";
-    document.getElementById('m-encargado-nom').innerText = d.contacto_evento_nombre || d.cliente_nombre || 'No especificado';
-    document.getElementById('m-encargado-tel').innerText = d.contacto_evento_telefono || d.cliente_telefono || 'N/A';
-
-    // Menú
-    const menuContainer = document.getElementById('m-menu-final');
-    let paquete = d.menu_opcion || "Pendiente";
-    let platosRaw = d.platos_lista || "";
-    let html = `<div style="font-weight:bold; color:var(--primary); margin-bottom:12px;">${paquete}</div>`;
-
-    if (platosRaw) {
-        let items = platosRaw.split('||');
-        html += `<ul style="display:grid; grid-template-columns: 1fr 1fr; gap:8px 25px; list-style-type: disc; padding-left:20px;">`;
-        items.forEach(item => { if (item.trim() !== "") html += `<li>${item}</li>`; });
-        html += `</ul>`;
-    } else {
-        html += `<em>Selección de platos pendiente</em>`;
-    }
-    menuContainer.innerHTML = html;
-
-    // Operativa
-    document.getElementById('m-horario').innerText = (d.hora_inicio ? d.hora_inicio.substring(0, 5) : '--') + " a " + (d.hora_fin ? d.hora_fin.substring(0, 5) : '--');
-    document.getElementById('m-evento-pax').innerText = d.evento + " / " + d.cantidad_personas + " Pax";
-    document.getElementById('m-montaje').innerText = (d.mesa_nombre || 'N/A') + " - " + (d.manteleria || 'N/A');
-    document.getElementById('m-servilleta').innerText = d.color_servilleta || "No especificado";
-    document.getElementById('m-it-log').innerText = "IT: " + (d.equipos_audiovisuales || "Ninguno") + " | LOG: " + (d.logistica || "N/A");
-    document.getElementById('m-observaciones').innerText = d.observaciones || "Sin restricciones";
+    // Información del cliente
+    document.getElementById('m-cliente').innerText = formatCliente(d.cliente_nombre, d.cliente_telefono);
+    document.getElementById('m-encargado-nom').innerText = limpiarTexto(d.contacto_evento_nombre) || limpiarTexto(d.cliente_nombre) || '—';
+    document.getElementById('m-encargado-tel').innerText = limpiarTexto(d.contacto_evento_telefono) || limpiarTexto(d.cliente_telefono) || '—';
 
     // Planimetría
     if (d.planimetria_url) {
@@ -124,6 +168,117 @@ function verDetalle(d) {
     enviarLog('VISUALIZAR', 'reservas', d.id, `Admin ${adminNombre} visualizó detalles de la reserva.`);
 
     document.getElementById('modalEvento').style.display = "block";
+}
+
+// --- FUNCIONES AUXILIARES NUEVAS ---
+
+function limpiarTexto(texto) {
+    if (!texto) return null;
+
+    const textoLimpio = texto.toString().trim();
+
+    if (textoLimpio === '' ||
+        textoLimpio.toLowerCase() === 'null' ||
+        textoLimpio.toLowerCase() === 'n/a' ||
+        textoLimpio.toLowerCase() === 'no especificado' ||
+        textoLimpio.toLowerCase() === 'pendiente' ||
+        textoLimpio.toLowerCase() === 'sin especificar' ||
+        textoLimpio.toLowerCase() === 'seleccione...') {
+        return null;
+    }
+
+    return textoLimpio;
+}
+
+function formatHorario(inicio, fin) {
+    const inicioLimpio = limpiarTexto(inicio);
+    const finLimpio = limpiarTexto(fin);
+
+    if (inicioLimpio && finLimpio) {
+        const inicioCorto = inicioLimpio.substring(0, 5);
+        const finCorto = finLimpio.substring(0, 5);
+        return `${inicioCorto} - ${finCorto}`;
+    } else if (inicioLimpio) {
+        return `${inicioLimpio.substring(0, 5)} - (Sin definir)`;
+    } else {
+        return '—';
+    }
+}
+
+function formatEventoPax(evento, pax) {
+    const eventoLimpio = limpiarTexto(evento);
+    const paxLimpio = pax ? pax + ' Pax' : '—';
+
+    if (eventoLimpio) {
+        return `${eventoLimpio} / ${paxLimpio}`;
+    } else {
+        return paxLimpio;
+    }
+}
+
+function formatMontaje(mesa, manteleria) {
+    const mesaLimpia = limpiarTexto(mesa);
+    const manteleriaLimpia = limpiarTexto(manteleria);
+
+    if (mesaLimpia && manteleriaLimpia) {
+        return `${mesaLimpia} - ${manteleriaLimpia}`;
+    } else if (mesaLimpia) {
+        return mesaLimpia;
+    } else if (manteleriaLimpia) {
+        return `Mantelería: ${manteleriaLimpia}`;
+    } else {
+        return '—';
+    }
+}
+
+function formatITLog(it, log) {
+    const itLimpio = limpiarTexto(it);
+    const logLimpio = limpiarTexto(log);
+
+    const itTexto = itLimpio && itLimpio.toLowerCase() !== 'ninguno' ? itLimpio : 'Sin equipos';
+    const logTexto = logLimpio || 'N/A';
+
+    return `IT: ${itTexto} | LOG: ${logTexto}`;
+}
+
+function formatFirma(nombre, identificacion, clienteNombre) {
+    const nombreLimpio = limpiarTexto(nombre);
+    const identLimpia = limpiarTexto(identificacion);
+
+    if (nombreLimpio) {
+        let texto = nombreLimpio;
+        if (identLimpia) {
+            texto += ` (${identLimpia})`;
+        }
+        return texto;
+    } else if (clienteNombre) {
+        return `${clienteNombre} (automático)`;
+    } else {
+        return '—';
+    }
+}
+
+function formatCliente(nombre, telefono) {
+    const nombreLimpio = limpiarTexto(nombre);
+    const telLimpio = limpiarTexto(telefono);
+
+    if (nombreLimpio && telLimpio) {
+        return `${nombreLimpio} (${telLimpio})`;
+    } else if (nombreLimpio) {
+        return nombreLimpio;
+    } else {
+        return '—';
+    }
+}
+
+// Añade esta función a tu archivo JS actual
+function exportarReservaPDF() {
+    if (!datosActuales || !datosActuales.id) {
+        alert("⚠️ Selecciona una reserva primero");
+        return;
+    }
+    // Abrir en pestaña nueva para que inicie la descarga
+    window.location.href = `generar_pdf.php?id=${datosActuales.id}`;
 }
 
 function solicitarEdicion() {

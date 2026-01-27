@@ -1,5 +1,5 @@
 <?php
-// Diccionario actualizado con las nuevas traducciones para Coffee Break
+// Diccionario actualizado con las nuevas traducciones para Almuerzo/Cena
 $texts = [
     'es' => [
         'confirmacion' => 'Confirmación de Evento',
@@ -49,6 +49,51 @@ $texts = [
         'desayuno_especial' => 'Especial',
         'desayuno_ecuatoriano' => 'Ecuatoriano',
 
+        // --- Traducciones para Menú Seminario (Interfaz) ---
+        'seminario_title' => 'Plan Seminario:',
+        'seminario_desc' => 'Seleccione la modalidad (Full Day o Half Day). Ambos planes incluyen Almuerzo Ejecutivo (Elija 1 Entrada, 1 Fuerte y 1 Postre).',
+        'full_day' => 'FULL DAY (8 Horas)',
+        'half_day' => 'HALF DAY (6 Horas)',
+        'coffee_am' => 'Coffee Break AM (2 bocaditos)',
+        'coffee_pm' => 'Coffee Break PM (2 bocaditos)',
+        'almuerzo_3' => 'Almuerzo Ejecutivo (3 tiempos)',
+        'agua_ilimitada' => 'Agua filtrada ilimitada',
+        'sel_almuerzo' => 'Selección de Almuerzo Ejecutivo',
+        'instruccion_almuerzo' => 'Por favor, seleccione una opción de cada tiempo.',
+        'entrada_titulo' => '1. ENTRADAS (Elija 1)',
+        'fuerte_titulo' => '2. PLATOS FUERTES (Elija 1)',
+        'postre_titulo' => '3. POSTRES (Elija 1)',
+        'visor_seminario' => 'Pase el ratón sobre un plato',
+
+        // --- Nuevas traducciones para Coffee Break ---
+        'Menú Coffee Break:' => 'Menú Coffee Break:',
+        'Seleccione el horario y elija exactamente' => 'Seleccione el horario y elija exactamente',
+        '2 bocaditos por persona.' => '2 bocaditos por persona.',
+        'Mañana' => 'Mañana',
+        'Tarde' => 'Tarde',
+        'No hay bocaditos disponibles en el menú.' => 'No hay bocaditos disponibles en el menú.',
+        'de 2' => 'de 2',
+
+        // --- Nuevas traducciones para Almuerzo/Cena ---
+        'menu_almuerzo_title' => 'Menú Almuerzo / Cena:',
+        'menu_almuerzo_desc' => 'Seleccione el plan deseado y elija un plato por cada tiempo disponible según su plan.',
+        'menu_2_tiempos' => 'Menú 2 Tiempos',
+        'menu_2_sub' => 'Fuerte + Postre',
+        'menu_3_tiempos' => 'Menú 3 Tiempos',
+        'menu_3_sub' => 'Entrada + Fuerte + Postre',
+        'menu_4_tiempos' => 'Menú 4 Tiempos',
+        'menu_4_sub' => 'Entrada + Sorbet + Fuerte + Postre',
+        'entradas_title' => 'ENTRADAS / CEVICHES',
+        'platos_fuertes_title' => 'PLATOS FUERTES',
+        'postres_title' => 'POSTRES',
+        'sorbet_title' => 'SORBET DE LIMÓN',
+        'sorbet_limon' => 'Sorbet de Limón',
+        'instruccion_preview' => 'Pase el mouse sobre un plato para verlo aquí',
+        'alt_preview' => 'Vista previa del plato',
+        'select_plate' => 'Seleccione un plato',
+        'total_selected' => 'Total seleccionados',
+        'No hay opciones configuradas.' => 'No hay opciones configuradas.',
+
         // Ítems de la base de datos (Llaves exactas)
         'Jugo de apio, perejil y naranja o jugo de' => 'Jugo de apio, perejil y naranja o jugo de',
         'fruta de estación (2 variedades)' => 'fruta de estación (2 variedades)',
@@ -74,31 +119,6 @@ $texts = [
         'chicharrón crocante' => 'chicharrón crocante',
         'Opción 2' => 'Opción 2',
         'Mote con chicharrón crocante y maduro frito' => 'Mote con chicharrón crocante y maduro frito',
-
-        // --- Traducciones para Menú Seminario (Interfaz) ---
-        'seminario_title' => 'Plan Seminario:',
-        'seminario_desc' => 'Seleccione la modalidad (Full Day o Half Day). Ambos planes incluyen Almuerzo Ejecutivo (Elija 1 Entrada, 1 Fuerte y 1 Postre).',
-        'full_day' => 'FULL DAY (8 Horas)',
-        'half_day' => 'HALF DAY (6 Horas)',
-        'coffee_am' => 'Coffee Break AM (2 bocaditos)',
-        'coffee_pm' => 'Coffee Break PM (2 bocaditos)',
-        'almuerzo_3' => 'Almuerzo Ejecutivo (3 tiempos)',
-        'agua_ilimitada' => 'Agua filtrada ilimitada',
-        'sel_almuerzo' => 'Selección de Almuerzo Ejecutivo',
-        'instruccion_almuerzo' => 'Por favor, seleccione una opción de cada tiempo.',
-        'entrada_titulo' => '1. ENTRADAS (Elija 1)',
-        'fuerte_titulo' => '2. PLATOS FUERTES (Elija 1)',
-        'postre_titulo' => '3. POSTRES (Elija 1)',
-        'visor_seminario' => 'Pase el ratón sobre un plato',
-
-        // --- Nuevas traducciones para Coffee Break ---
-        'Menú Coffee Break:' => 'Coffee Break Menu:',
-        'Seleccione el horario y elija exactamente' => 'Select the time slot and choose exactly',
-        '2 bocaditos por persona.' => '2 snacks per person.',
-        'Mañana' => 'Morning',
-        'Tarde' => 'Afternoon',
-        'No hay bocaditos disponibles en el menú.' => 'No snacks available in the menu.',
-        'de 2' => 'of 2'
     ],
     'en' => [
         'confirmacion' => 'Event Confirmation',
@@ -148,6 +168,51 @@ $texts = [
         'desayuno_especial' => 'Special',
         'desayuno_ecuatoriano' => 'Ecuadorian',
 
+        // --- Traducciones para Menú Seminario (Interfaz) ---
+        'seminario_title' => 'Seminar Plan:',
+        'seminario_desc' => 'Select the modality (Full Day or Half Day). Both plans include Executive Lunch (Choose 1 Starter, 1 Main Course and 1 Dessert).',
+        'full_day' => 'FULL DAY (8 Hours)',
+        'half_day' => 'HALF DAY (6 Hours)',
+        'coffee_am' => 'AM Coffee Break (2 snacks)',
+        'coffee_pm' => 'PM Coffee Break (2 snacks)',
+        'almuerzo_3' => 'Executive Lunch (3 courses)',
+        'agua_ilimitada' => 'Unlimited filtered water',
+        'sel_almuerzo' => 'Executive Lunch Selection',
+        'instruccion_almuerzo' => 'Please select one option for each course.',
+        'entrada_titulo' => '1. STARTERS (Choose 1)',
+        'fuerte_titulo' => '2. MAIN COURSES (Choose 1)',
+        'postre_titulo' => '3. DESSERTS (Choose 1)',
+        'visor_seminario' => 'Hover over a dish',
+
+        // --- Nuevas traducciones para Coffee Break ---
+        'Menú Coffee Break:' => 'Coffee Break Menu:',
+        'Seleccione el horario y elija exactamente' => 'Select the time slot and choose exactly',
+        '2 bocaditos por persona.' => '2 snacks per person.',
+        'Mañana' => 'Morning',
+        'Tarde' => 'Afternoon',
+        'No hay bocaditos disponibles en el menú.' => 'No snacks available in the menu.',
+        'de 2' => 'of 2',
+
+        // --- Nuevas traducciones para Almuerzo/Cena ---
+        'menu_almuerzo_title' => 'Lunch / Dinner Menu:',
+        'menu_almuerzo_desc' => 'Select the desired plan and choose one dish for each available course according to your plan.',
+        'menu_2_tiempos' => '2-Course Menu',
+        'menu_2_sub' => 'Main + Dessert',
+        'menu_3_tiempos' => '3-Course Menu',
+        'menu_3_sub' => 'Starter + Main + Dessert',
+        'menu_4_tiempos' => '4-Course Menu',
+        'menu_4_sub' => 'Starter + Sorbet + Main + Dessert',
+        'entradas_title' => 'STARTERS / CEVICHES',
+        'platos_fuertes_title' => 'MAIN COURSES',
+        'postres_title' => 'DESSERTS',
+        'sorbet_title' => 'LEMON SORBET',
+        'sorbet_limon' => 'Lemon Sorbet',
+        'instruccion_preview' => 'Hover over a dish to see it here',
+        'alt_preview' => 'Dish preview',
+        'select_plate' => 'Select a dish',
+        'total_selected' => 'Total selected',
+        'No hay opciones configuradas.' => 'No options configured.',
+
         // Ítems de la base de datos (Traducciones)
         'Jugo de apio, perejil y naranja o jugo de' => 'Celery, parsley and orange juice or',
         'fruta de estación (2 variedades)' => 'seasonal fruit juice (2 varieties)',
@@ -173,31 +238,6 @@ $texts = [
         'chicharrón crocante' => 'crispy pork rind',
         'Opción 2' => 'Option 2',
         'Mote con chicharrón crocante y maduro frito' => 'Mote (hominy) with crispy pork rind and fried sweet plantain',
-
-        // --- Traducciones para Menú Seminario (Interfaz) ---
-        'seminario_title' => 'Seminar Plan:',
-        'seminario_desc' => 'Select the modality (Full Day or Half Day). Both plans include Executive Lunch (Choose 1 Starter, 1 Main Course and 1 Dessert).',
-        'full_day' => 'FULL DAY (8 Hours)',
-        'half_day' => 'HALF DAY (6 Hours)',
-        'coffee_am' => 'AM Coffee Break (2 snacks)',
-        'coffee_pm' => 'PM Coffee Break (2 snacks)',
-        'almuerzo_3' => 'Executive Lunch (3 courses)',
-        'agua_ilimitada' => 'Unlimited filtered water',
-        'sel_almuerzo' => 'Executive Lunch Selection',
-        'instruccion_almuerzo' => 'Please select one option for each course.',
-        'entrada_titulo' => '1. STARTERS (Choose 1)',
-        'fuerte_titulo' => '2. MAIN COURSES (Choose 1)',
-        'postre_titulo' => '3. DESSERTS (Choose 1)',
-        'visor_seminario' => 'Hover over a dish',
-
-        // --- Nuevas traducciones para Coffee Break ---
-        'Menú Coffee Break:' => 'Coffee Break Menu:',
-        'Seleccione el horario y elija exactamente' => 'Select the time slot and choose exactly',
-        '2 bocaditos por persona.' => '2 snacks per person.',
-        'Mañana' => 'Morning',
-        'Tarde' => 'Afternoon',
-        'No hay bocaditos disponibles en el menú.' => 'No snacks available in the menu.',
-        'de 2' => 'of 2'
     ]
 ];
 ?>

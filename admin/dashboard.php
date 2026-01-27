@@ -240,6 +240,11 @@ $res = $conn->query($sql);
         <div class="modal-content">
             <div class="modal-header">
                 <h2 style="margin:0; font-size: 1.1rem;">Expediente del Evento</h2>
+                <button type="button" class="btn-pdf" onclick="exportarReservaPDF()"
+                    style="background: #c0392b; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 5px;">
+                    📄 Exportar PDF
+                </button>
+
                 <div id="edit-button-container" style="display: none;">
                     <button type="button" class="btn-edit" onclick="solicitarEdicion()">
                         ✏️ Editar Expediente
