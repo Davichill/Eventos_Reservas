@@ -97,6 +97,7 @@ if (isset($_GET['del'])) {
     <meta charset="UTF-8">
     <title>Gestión Cóctel | GO Quito</title>
     <link rel="stylesheet" href="../css/gestion_menu/gestion_coctel.css">
+    <link rel="stylesheet" href="../css/gestion_menu/estilos_admin.css">
     <style>
         /*Estilo del filtro*/
         .filter-dashboard {
@@ -170,179 +171,186 @@ if (isset($_GET['del'])) {
 </head>
 
 <body>
-    <?php include 'navbar.php'; ?>
+    <div class="admin-container">
+        <?php include '../includes/sidebar.php'; ?>
+        <main class="main-content">
+            <?php include 'navbar.php'; ?>
 
-    <?php if (isset($_GET['res'])): ?>
-        <div class="status-message success">
-            <?php
-            $msg = [
-                'ok' => '✅ Plato guardado correctamente',
-                'del' => '🗑️ Plato eliminado exitosamente'
-            ];
-            echo $msg[$_GET['res']] ?? 'Operación completada';
-            ?>
-        </div>
-    <?php endif; ?>
-
-    <div class="panel">
-        <div class="header-section">
-            <h1>Administración de Cóctel (Bocaditos)</h1>
-            <p>Gestiona los bocaditos para eventos de cóctel. Los cambios se reflejarán inmediatamente en el menú.</p>
-            <div class="path-info">/img/menu_coctel/</div>
-        </div>
-
-        <div class="form-box">
-            <form method="POST" enctype="multipart/form-data" class="form-grid">
-                <div class="form-group">
-                    <label>Nombre del Bocadito:</label>
-                    <input type="text" name="nombre" required placeholder="Ej: Mini empanadas de carne"
-                        title="Ingrese el nombre descriptivo del bocadito">
-                </div>
-                <div class="form-group">
-                    <label>Categoría:</label>
-                    <select name="categoria" id="main-cat" onchange="actualizarSubs(this.value, 'main-sub')" required>
-                        <option value="">Seleccione categoría...</option>
-                        <option value="BOCADOS SALADOS"> Bocados Salados</option>
-                        <option value="VEGETARIANO / VEGANO"> Vegetariano / Vegano</option>
-                        <option value="MARISCOS Y PESCADOS"> Mariscos y Pescados</option>
-                        <option value="BOCADITOS DULCES"> Bocaditos Dulces</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Subcategoría:</label>
-                    <select name="subcategoria" id="main-sub" required>
-                        <option value="">Primero elija categoría</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Imagen:</label>
-                    <input type="file" name="imagen" accept="image/*" required
-                        title="Suba una imagen del bocadito (JPG, PNG, GIF)">
-                </div>
-                <button type="submit" name="guardar" class="btn-main">Guardar</button>
-            </form>
-        </div>
-
-        <div class="filter-dashboard">
-            <div class="filter-main">
-                <label>Buscar bocadito:</label>
-                <input type="text" id="filter-search" placeholder="🔍 Escribe el nombre...">
-            </div>
-            <div class="filter-options">
-                <div class="filter-group">
-                    <label>Categoría:</label>
-                    <select id="filter-cat">
-                        <option value="all">Todas las categorías</option>
-                        <option value="BOCADOS SALADOS">Bocados Salados</option>
-                        <option value="VEGETARIANO / VEGANO">Vegetariano / Vegano</option>
-                        <option value="MARISCOS Y PESCADOS">Mariscos y Pescados</option>
-                        <option value="BOCADITOS DULCES">Bocaditos Dulces</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label>Subcategoría:</label>
-                    <select id="filter-sub">
-                        <option value="all">Todas las subcategorías</option>
-                    </select>
-                </div>
-            </div>
-            <div class="filter-results">
-                Mostrando <span id="visible-count">0</span> bocaditos
-            </div>
-        </div>
-
-        <div class="grid-platos">
-            <?php
-            $bocaditos = $conn->query("SELECT * FROM menu_coctel ORDER BY categoria ASC, subcategoria ASC, nombre ASC");
-
-            if ($bocaditos->num_rows === 0): ?>
-                <div class="empty-state">
-                    <h4>No hay bocaditos registrados</h4>
-                    <p>Comienza agregando bocaditos usando el formulario superior</p>
-                </div>
-            <?php else:
-                while ($b = $bocaditos->fetch_assoc()):
-                    $img_src = $carpeta_destino . $b['imagen_url'];
-                    $img_exists = file_exists($img_src);
+            <?php if (isset($_GET['res'])): ?>
+                <div class="status-message success">
+                    <?php
+                    $msg = [
+                        'ok' => '✅ Plato guardado correctamente',
+                        'del' => '🗑️ Plato eliminado exitosamente'
+                    ];
+                    echo $msg[$_GET['res']] ?? 'Operación completada';
                     ?>
-                    <div class="card">
-                        <div class="card-image">
-                            <?php if ($img_exists): ?>
-                                <img src="<?= $img_src ?>" alt="<?= htmlspecialchars($b['nombre']) ?>"
-                                    onerror="this.parentElement.innerHTML='<div class=\'no-image\'>🍽️</div>'">
-                            <?php else: ?>
-                                <div class="no-image">🍽️</div>
-                            <?php endif; ?>
+                </div>
+            <?php endif; ?>
+
+            <div class="panel">
+                <div class="header-section">
+                    <h1>Administración de Cóctel (Bocaditos)</h1>
+                    <p>Gestiona los bocaditos para eventos de cóctel. Los cambios se reflejarán inmediatamente en el
+                        menú.</p>
+                    <div class="path-info">/img/menu_coctel/</div>
+                </div>
+
+                <div class="form-box">
+                    <form method="POST" enctype="multipart/form-data" class="form-grid">
+                        <div class="form-group">
+                            <label>Nombre del Bocadito:</label>
+                            <input type="text" name="nombre" required placeholder="Ej: Mini empanadas de carne"
+                                title="Ingrese el nombre descriptivo del bocadito">
                         </div>
+                        <div class="form-group">
+                            <label>Categoría:</label>
+                            <select name="categoria" id="main-cat" onchange="actualizarSubs(this.value, 'main-sub')"
+                                required>
+                                <option value="">Seleccione categoría...</option>
+                                <option value="BOCADOS SALADOS"> Bocados Salados</option>
+                                <option value="VEGETARIANO / VEGANO"> Vegetariano / Vegano</option>
+                                <option value="MARISCOS Y PESCADOS"> Mariscos y Pescados</option>
+                                <option value="BOCADITOS DULCES"> Bocaditos Dulces</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Subcategoría:</label>
+                            <select name="subcategoria" id="main-sub" required>
+                                <option value="">Primero elija categoría</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Imagen:</label>
+                            <input type="file" name="imagen" accept="image/*" required
+                                title="Suba una imagen del bocadito (JPG, PNG, GIF)">
+                        </div>
+                        <button type="submit" name="guardar" class="btn-main">Guardar</button>
+                    </form>
+                </div>
 
-                        <div class="card-content">
-                            <div class="badge-container">
-                                <span class="badge-cat"><?= $b['categoria'] ?></span>
-                                <span class="badge-sub"><?= $b['subcategoria'] ?></span>
-                            </div>
-
-                            <h4 class="card-title"><?= htmlspecialchars($b['nombre']) ?></h4>
-
-                            <div class="card-actions">
-                                <a href="javascript:void(0)" onclick='abrirEditor(<?= json_encode($b) ?>)'
-                                    class="btn-action btn-edit" title="Editar bocadito">
-                                    ✏️ Editar
-                                </a>
-                                <a href="?del=<?= $b['id'] ?>" class="btn-action btn-delete"
-                                    onclick="return confirm('¿Está seguro de eliminar este bocadito?')"
-                                    title="Eliminar bocadito">
-                                    🗑️ Eliminar
-                                </a>
-                            </div>
+                <div class="filter-dashboard">
+                    <div class="filter-main">
+                        <label>Buscar bocadito:</label>
+                        <input type="text" id="filter-search" placeholder="🔍 Escribe el nombre...">
+                    </div>
+                    <div class="filter-options">
+                        <div class="filter-group">
+                            <label>Categoría:</label>
+                            <select id="filter-cat">
+                                <option value="all">Todas las categorías</option>
+                                <option value="BOCADOS SALADOS">Bocados Salados</option>
+                                <option value="VEGETARIANO / VEGANO">Vegetariano / Vegano</option>
+                                <option value="MARISCOS Y PESCADOS">Mariscos y Pescados</option>
+                                <option value="BOCADITOS DULCES">Bocaditos Dulces</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Subcategoría:</label>
+                            <select id="filter-sub">
+                                <option value="all">Todas las subcategorías</option>
+                            </select>
                         </div>
                     </div>
-                <?php endwhile;
-            endif; ?>
-        </div>
-    </div>
-
-    <!-- Modal de edición -->
-    <div id="modalEdit">
-        <div class="modal-content">
-            <h3>✏️ Editar Bocadito</h3>
-            <form method="POST" enctype="multipart/form-data">
-                <input type="hidden" name="id" id="edit-id">
-
-                <div class="form-group">
-                    <label>Nombre:</label>
-                    <input type="text" name="nombre" id="edit-nombre" required>
+                    <div class="filter-results">
+                        Mostrando <span id="visible-count">0</span> bocaditos
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label>Categoría:</label>
-                    <select name="categoria" id="edit-cat" onchange="actualizarSubs(this.value, 'edit-sub', '')"
-                        required>
-                        <option value="BOCADOS SALADOS"> Bocados Salados</option>
-                        <option value="VEGETARIANO / VEGANO"> Vegetariano / Vegano</option>
-                        <option value="MARISCOS Y PESCADOS"> Mariscos y Pescados</option>
-                        <option value="BOCADITOS DULCES"> Bocaditos Dulces</option>
-                    </select>
-                </div>
+                <div class="grid-platos">
+                    <?php
+                    $bocaditos = $conn->query("SELECT * FROM menu_coctel ORDER BY categoria ASC, subcategoria ASC, nombre ASC");
 
-                <div class="form-group">
-                    <label>Subcategoría:</label>
-                    <select name="subcategoria" id="edit-sub" required>
-                        <option value="">Cargando...</option>
-                    </select>
-                </div>
+                    if ($bocaditos->num_rows === 0): ?>
+                        <div class="empty-state">
+                            <h4>No hay bocaditos registrados</h4>
+                            <p>Comienza agregando bocaditos usando el formulario superior</p>
+                        </div>
+                    <?php else:
+                        while ($b = $bocaditos->fetch_assoc()):
+                            $img_src = $carpeta_destino . $b['imagen_url'];
+                            $img_exists = file_exists($img_src);
+                            ?>
+                            <div class="card">
+                                <div class="card-image">
+                                    <?php if ($img_exists): ?>
+                                        <img src="<?= $img_src ?>" alt="<?= htmlspecialchars($b['nombre']) ?>"
+                                            onerror="this.parentElement.innerHTML='<div class=\'no-image\'>🍽️</div>'">
+                                    <?php else: ?>
+                                        <div class="no-image">🍽️</div>
+                                    <?php endif; ?>
+                                </div>
 
-                <div class="form-group">
-                    <label>Nueva imagen (opcional):</label>
-                    <input type="file" name="imagen" accept="image/*">
-                    <small style="color:var(--text-light); display:block; margin-top:5px;">
-                        Deje en blanco para mantener la imagen actual
-                    </small>
-                </div>
+                                <div class="card-content">
+                                    <div class="badge-container">
+                                        <span class="badge-cat"><?= $b['categoria'] ?></span>
+                                        <span class="badge-sub"><?= $b['subcategoria'] ?></span>
+                                    </div>
 
-                <button type="submit" name="guardar" class="btn-main">Actualizar</button>
-                <button type="button" onclick="cerrarModal()" class="btn-cancel">Cancelar</button>
-            </form>
-        </div>
+                                    <h4 class="card-title"><?= htmlspecialchars($b['nombre']) ?></h4>
+
+                                    <div class="card-actions">
+                                        <a href="javascript:void(0)" onclick='abrirEditor(<?= json_encode($b) ?>)'
+                                            class="btn-action btn-edit" title="Editar bocadito">
+                                            ✏️ Editar
+                                        </a>
+                                        <a href="?del=<?= $b['id'] ?>" class="btn-action btn-delete"
+                                            onclick="return confirm('¿Está seguro de eliminar este bocadito?')"
+                                            title="Eliminar bocadito">
+                                            🗑️ Eliminar
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endwhile;
+                    endif; ?>
+                </div>
+            </div>
+
+            <!-- Modal de edición -->
+            <div id="modalEdit">
+                <div class="modal-content">
+                    <h3>✏️ Editar Bocadito</h3>
+                    <form method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="id" id="edit-id">
+
+                        <div class="form-group">
+                            <label>Nombre:</label>
+                            <input type="text" name="nombre" id="edit-nombre" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Categoría:</label>
+                            <select name="categoria" id="edit-cat" onchange="actualizarSubs(this.value, 'edit-sub', '')"
+                                required>
+                                <option value="BOCADOS SALADOS"> Bocados Salados</option>
+                                <option value="VEGETARIANO / VEGANO"> Vegetariano / Vegano</option>
+                                <option value="MARISCOS Y PESCADOS"> Mariscos y Pescados</option>
+                                <option value="BOCADITOS DULCES"> Bocaditos Dulces</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Subcategoría:</label>
+                            <select name="subcategoria" id="edit-sub" required>
+                                <option value="">Cargando...</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Nueva imagen (opcional):</label>
+                            <input type="file" name="imagen" accept="image/*">
+                            <small style="color:var(--text-light); display:block; margin-top:5px;">
+                                Deje en blanco para mantener la imagen actual
+                            </small>
+                        </div>
+
+                        <button type="submit" name="guardar" class="btn-main">Actualizar</button>
+                        <button type="button" onclick="cerrarModal()" class="btn-cancel">Cancelar</button>
+                    </form>
+                </div>
+            </div>
+        </main>
     </div>
 
     <script>

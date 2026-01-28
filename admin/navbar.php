@@ -11,21 +11,6 @@ $current_page = basename($_SERVER['PHP_SELF']);
 $nombre_admin = isset($_SESSION['admin_usuario']) ? $_SESSION['admin_usuario'] : 'Admin';
 ?>
 
-<header
-    style="background: #2c3e50; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center;">
-    <div>
-        <h1 style="margin:0; font-size: 1.3rem; letter-spacing: 0.5px;">Banquetes & Eventos | <span
-                style="font-weight: 300;">Panel Control</span></h1>
-    </div>
-    <div style="display: flex; gap: 20px; align-items: center;">
-        <span style="font-size: 13px; border-right: 1px solid rgba(255,255,255,0.3); padding-right: 15px;">
-            Usuario: <strong><?= $nombre_admin ?></strong>
-        </span>
-        <a href="logout.php" style="color: #ff7675; text-decoration: none; font-size: 13px; font-weight: bold;">Cerrar
-            Sesión</a>
-    </div>
-</header>
-
 <nav class="main-navbar">
     <span class="nav-label">Gestión:</span>
 

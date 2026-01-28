@@ -1,4 +1,5 @@
 <?php
+
 include_once __DIR__ . '/../php/conexion.php';
 session_start();
 
@@ -96,109 +97,115 @@ if (isset($_GET['del'])) {
     <meta charset="UTF-8">
     <title>Gestión de Mesas | GO Quito</title>
     <link rel="stylesheet" href="../css/gestion_menu/gestion_mesas.css">
+    <link rel="stylesheet" href="../css/gestion_menu/estilos_admin.css">
 </head>
 
 <body>
-    <?php include 'navbar.php'; ?>
+    <div class="admin-container">
+        <?php include '../includes/sidebar.php'; ?>
+        <main class="main-content">
+            <?php include 'navbar.php'; ?>
 
-    <?php if (isset($_GET['res'])): ?>
-        <div class="status-message <?= $_GET['res'] === 'ok' ? 'success' : 'error' ?>">
-            <?= $_GET['res'] === 'ok' ? '✅ Mesa guardada correctamente' : '🗑️ Mesa eliminada exitosamente' ?>
-        </div>
-    <?php endif; ?>
-
-    <div class="main-container">
-        <div class="header-section">
-            <h1>Administración de Mesas</h1>
-            <div class="header-info">
-                <div class="path-info">/img/mesas/</div>
-            </div>
-        </div>
-
-        <div class="form-box">
-            <h3>Registrar Nueva Mesa</h3>
-            <form method="POST" enctype="multipart/form-data" class="form-grid">
-                <div class="form-group">
-                    <label>Nombre de la mesa:</label>
-                    <input type="text" name="nombre" id="crear_nombre"
-                        placeholder="Ej: Mesa Imperial, Mesa Redonda (10 pax)" required>
+            <?php if (isset($_GET['res'])): ?>
+                <div class="status-message <?= $_GET['res'] === 'ok' ? 'success' : 'error' ?>">
+                    <?= $_GET['res'] === 'ok' ? '✅ Mesa guardada correctamente' : '🗑️ Mesa eliminada exitosamente' ?>
                 </div>
-                <div class="form-group">
-                    <label>Imagen de la mesa:</label>
-                    <input type="file" name="imagen" accept="image/*" required>
-                </div>
-                <input type="hidden" name="id" value="0">
-                <button type="submit" name="guardar" class="btn-main">Guardar Mesa</button>
-            </form>
-        </div>
+            <?php endif; ?>
 
-        <div class="grid-platos">
-            <?php
-            $mesas = $conn->query("SELECT * FROM mesas ORDER BY id DESC");
-
-            if ($mesas->num_rows === 0): ?>
-                <div class="empty-state">
-                    <h4>No hay mesas registradas</h4>
-                    <p>Comienza agregando configuraciones de mesas usando el formulario.</p>
-                </div>
-            <?php else:
-                while ($m = $mesas->fetch_assoc()):
-                    $img_src = $carpeta_destino . $m['imagen_url'];
-                    $img_exists = (!empty($m['imagen_url']) && file_exists($img_src));
-                    ?>
-                    <div class="card">
-                        <div class="card-image">
-                            <?php if ($img_exists): ?>
-                                <img src="<?= $img_src ?>" alt="<?= htmlspecialchars($m['nombre']) ?>">
-                            <?php else: ?>
-                                <div class="no-image">
-                                    <span>🪑</span>
-                                    <span>Sin imagen</span>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-
-                        <div class="card-content">
-                            <h4 class="card-title"><?= htmlspecialchars($m['nombre']) ?></h4>
-                            <div class="card-actions">
-                                <a href="javascript:void(0)" onclick='abrirEditor(<?= json_encode($m) ?>)'
-                                    class="btn-card btn-card-edit">
-                                    ✏️ Editar
-                                </a>
-                                <a href="?del=<?= $m['id'] ?>" class="btn-card btn-card-delete"
-                                    onclick="return confirm('¿Eliminar esta configuración de mesa?')">
-                                    🗑️ Eliminar
-                                </a>
-                            </div>
-                        </div>
+            <div class="main-container">
+                <div class="header-section">
+                    <h1>Administración de Mesas</h1>
+                    <div class="header-info">
+                        <div class="path-info">/img/mesas/</div>
                     </div>
-                <?php endwhile;
-            endif; ?>
-        </div>
-    </div>
-
-    <div id="modalEdit">
-        <div class="modal-content">
-            <h3>Editar Mesa</h3>
-            <form method="POST" enctype="multipart/form-data" id="formEditar">
-                <input type="hidden" name="id" id="edit-id">
-
-                <div class="form-group">
-                    <label>Nombre de la mesa:</label>
-                    <input type="text" name="nombre" id="edit-nombre" required>
                 </div>
 
-                <div class="form-group">
-                    <label>Cambiar imagen (opcional):</label>
-                    <input type="file" name="imagen" accept="image/*">
-                    <small style="color:gray; display:block; margin-top:5px;">Deje en blanco para mantener la
-                        actual</small>
+                <div class="form-box">
+                    <h3>Registrar Nueva Mesa</h3>
+                    <form method="POST" enctype="multipart/form-data" class="form-grid">
+                        <div class="form-group">
+                            <label>Nombre de la mesa:</label>
+                            <input type="text" name="nombre" id="crear_nombre"
+                                placeholder="Ej: Mesa Imperial, Mesa Redonda (10 pax)" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Imagen de la mesa:</label>
+                            <input type="file" name="imagen" accept="image/*" required>
+                        </div>
+                        <input type="hidden" name="id" value="0">
+                        <button type="submit" name="guardar" class="btn-main">Guardar Mesa</button>
+                    </form>
                 </div>
 
-                <button type="submit" name="guardar" class="btn-main">Actualizar</button>
-                <button type="button" onclick="cerrarModal()" class="btn-cancel">Cancelar</button>
-            </form>
-        </div>
+                <div class="grid-platos">
+                    <?php
+                    $mesas = $conn->query("SELECT * FROM mesas ORDER BY id DESC");
+
+                    if ($mesas->num_rows === 0): ?>
+                        <div class="empty-state">
+                            <h4>No hay mesas registradas</h4>
+                            <p>Comienza agregando configuraciones de mesas usando el formulario.</p>
+                        </div>
+                    <?php else:
+                        while ($m = $mesas->fetch_assoc()):
+                            $img_src = $carpeta_destino . $m['imagen_url'];
+                            $img_exists = (!empty($m['imagen_url']) && file_exists($img_src));
+                            ?>
+                            <div class="card">
+                                <div class="card-image">
+                                    <?php if ($img_exists): ?>
+                                        <img src="<?= $img_src ?>" alt="<?= htmlspecialchars($m['nombre']) ?>">
+                                    <?php else: ?>
+                                        <div class="no-image">
+                                            <span>🪑</span>
+                                            <span>Sin imagen</span>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+
+                                <div class="card-content">
+                                    <h4 class="card-title"><?= htmlspecialchars($m['nombre']) ?></h4>
+                                    <div class="card-actions">
+                                        <a href="javascript:void(0)" onclick='abrirEditor(<?= json_encode($m) ?>)'
+                                            class="btn-card btn-card-edit">
+                                            ✏️ Editar
+                                        </a>
+                                        <a href="?del=<?= $m['id'] ?>" class="btn-card btn-card-delete"
+                                            onclick="return confirm('¿Eliminar esta configuración de mesa?')">
+                                            🗑️ Eliminar
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endwhile;
+                    endif; ?>
+                </div>
+            </div>
+
+            <div id="modalEdit">
+                <div class="modal-content">
+                    <h3>Editar Mesa</h3>
+                    <form method="POST" enctype="multipart/form-data" id="formEditar">
+                        <input type="hidden" name="id" id="edit-id">
+
+                        <div class="form-group">
+                            <label>Nombre de la mesa:</label>
+                            <input type="text" name="nombre" id="edit-nombre" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Cambiar imagen (opcional):</label>
+                            <input type="file" name="imagen" accept="image/*">
+                            <small style="color:gray; display:block; margin-top:5px;">Deje en blanco para mantener la
+                                actual</small>
+                        </div>
+
+                        <button type="submit" name="guardar" class="btn-main">Actualizar</button>
+                        <button type="button" onclick="cerrarModal()" class="btn-cancel">Cancelar</button>
+                    </form>
+                </div>
+            </div>
+        </main>
     </div>
 
     <script>

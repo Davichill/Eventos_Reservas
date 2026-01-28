@@ -15,11 +15,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 } else {
     // Si no es POST y ya está logueado, lo mandamos al dashboard
     if (isset($_SESSION['admin'])) {
-        header("Location: dashboard.php");
+        header("Location: ../admin/dashboard.php");
         exit();
     }
     // Si no es POST y no está logueado, lo regresamos al formulario
-    header("Location: login.php");
+    header("Location: ../auth/login.php");
     exit();
 }
 
@@ -90,7 +90,7 @@ if ($resultado->num_rows === 1) {
         // Determinar si es administrador principal
         $_SESSION['es_principal'] = ($usuario['id'] == 1 && $usuario['tipo'] == 'principal');
 
-        header("Location: dashboard.php");
+        header("Location: ../admin/dashboard.php");
         exit();
     } else {
         echo "<script>alert('Usuario o contraseña incorrectos'); window.location.href='login.php';</script>";

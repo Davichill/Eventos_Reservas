@@ -99,6 +99,7 @@ if (isset($_GET['del'])) {
     <meta charset="UTF-8">
     <title>Gestión Seminario | GO Hotel</title>
     <link rel="stylesheet" href="../css/gestion_menu/gestion_seminario.css">
+    <link rel="stylesheet" href="../css/gestion_menu/estilos_admin.css">
     <style>
         .filter-dashboard {
             background: #fff;
@@ -159,191 +160,198 @@ if (isset($_GET['del'])) {
 </head>
 
 <body>
-    <?php include 'navbar.php'; ?>
+    <div class="admin-container">
+        <?php include '../includes/sidebar.php'; ?>
+        <main class="main-content">
+            <?php include 'navbar.php'; ?>
 
-    <?php if (isset($_GET['msj'])): ?>
-        <div class="status-message success">
-            ✅ Plato guardado correctamente
-        </div>
-    <?php endif; ?>
+            <?php if (isset($_GET['msj'])): ?>
+                <div class="status-message success">
+                    ✅ Plato guardado correctamente
+                </div>
+            <?php endif; ?>
 
-    <div class="main-container">
-        <div class="header-section">
-            <h1>Gestión de Menú para Seminarios</h1>
-            <div class="header-info">
-                <div class="path-info">/img/menu_seminario/</div>
+            <div class="main-container">
+                <div class="header-section">
+                    <h1>Gestión de Menú para Seminarios</h1>
+                    <div class="header-info">
+                        <div class="path-info">/img/menu_seminario/</div>
 
-            </div>
-        </div>
+                    </div>
+                </div>
 
-        <!-- Formulario principal para crear nuevos platos -->
-        <div class="form-box">
-            <h3>Registrar Nuevo Plato</h3>
-            <form method="POST" enctype="multipart/form-data" class="form-grid">
-                <div class="form-group">
-                    <label>Nombre del Plato:</label>
-                    <input type="text" name="nombre" id="crear_nombre"
-                        placeholder="Ej: Lomo Saltado, Ceviche Mixto, etc." required
-                        title="Ingrese el nombre completo del plato">
-                </div>
-                <div class="form-group">
-                    <label>Sección:</label>
-                    <select name="seccion" id="crear_seccion" onchange="actualizarSubs(this.value, 'crear_cat')"
-                        required>
-                        <option value="">Seleccione sección...</option>
-                        <?php foreach ($secciones as $s): ?>
-                            <option value="<?= $s ?>"><?= $s ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Categoría específica:</label>
-                    <select name="categoria" id="crear_cat" required>
-                        <option value="">Primero elija sección</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Imagen:</label>
-                    <input type="file" name="foto" accept="image/*" required
-                        title="Suba una imagen del plato (JPG, PNG, GIF)">
-                </div>
-                <input type="hidden" name="id" value="0">
-                <button type="submit" name="btnguardar" class="btn-main">Guardar Plato</button>
-            </form>
-        </div>
-
-        <div class="filter-dashboard">
-            <div class="filter-main">
-                <input type="text" id="filter-search" placeholder="🔍 Buscar por nombre del plato...">
-            </div>
-            <div class="filter-options">
-                <div class="filter-group">
-                    <label>Sección:</label>
-                    <select id="filter-seccion">
-                        <option value="all">Todas las secciones</option>
-                        <?php foreach ($secciones as $s): ?>
-                            <option value="<?= $s ?>">
-                                <?= $s ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label>Categoría:</label>
-                    <select id="filter-categoria">
-                        <option value="all">Todas las categorías</option>
-                    </select>
-                </div>
-            </div>
-            <div class="filter-results">
-                Mostrando <span id="visible-count">0</span> platos
-            </div>
-        </div>
-
-        <!-- Listado de platos existentes -->
-        <div class="grid-platos">
-            <?php
-            $items = $conn->query("SELECT * FROM menu_seminario ORDER BY FIELD(seccion, 'ENTRADA', 'PLATO FUERTE', 'POSTRE'), categoria");
-
-            if ($items->num_rows === 0): ?>
-                <div class="empty-state">
-                    <h4>No hay platos registrados</h4>
-                    <p>Comienza agregando platos usando el formulario superior</p>
-                </div>
-            <?php else:
-                while ($row = $items->fetch_assoc()):
-                    $img_src = (!empty($row['imagen_url']) && file_exists("../img/menu_seminario/" . $row['imagen_url']))
-                        ? "../img/menu_seminario/" . $row['imagen_url']
-                        : null;
-                    $seccion_class = '';
-                    if ($row['seccion'] == 'ENTRADA') {
-                        $seccion_class = 'seccion-entrada';
-                    } elseif ($row['seccion'] == 'PLATO FUERTE') {
-                        $seccion_class = 'seccion-plato';
-                    } else {
-                        $seccion_class = 'seccion-postre';
-                    }
-                    ?>
-                    <div class="card-plato <?= $seccion_class ?>">
-                        <div class="card-image">
-                            <?php if ($img_src): ?>
-                                <img src="<?= $img_src ?>" alt="<?= htmlspecialchars($row['nombre']) ?>"
-                                    onerror="this.parentElement.innerHTML='<div class=\'no-image\'><span>🍽️</span><span>Imagen no disponible</span></div>'">
-                            <?php else: ?>
-                                <div class="no-image">
-                                    <span>🍽️</span>
-                                    <span>Sin imagen</span>
-                                </div>
-                            <?php endif; ?>
+                <!-- Formulario principal para crear nuevos platos -->
+                <div class="form-box">
+                    <h3>Registrar Nuevo Plato</h3>
+                    <form method="POST" enctype="multipart/form-data" class="form-grid">
+                        <div class="form-group">
+                            <label>Nombre del Plato:</label>
+                            <input type="text" name="nombre" id="crear_nombre"
+                                placeholder="Ej: Lomo Saltado, Ceviche Mixto, etc." required
+                                title="Ingrese el nombre completo del plato">
                         </div>
+                        <div class="form-group">
+                            <label>Sección:</label>
+                            <select name="seccion" id="crear_seccion" onchange="actualizarSubs(this.value, 'crear_cat')"
+                                required>
+                                <option value="">Seleccione sección...</option>
+                                <?php foreach ($secciones as $s): ?>
+                                    <option value="<?= $s ?>"><?= $s ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Categoría específica:</label>
+                            <select name="categoria" id="crear_cat" required>
+                                <option value="">Primero elija sección</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Imagen:</label>
+                            <input type="file" name="foto" accept="image/*" required
+                                title="Suba una imagen del plato (JPG, PNG, GIF)">
+                        </div>
+                        <input type="hidden" name="id" value="0">
+                        <button type="submit" name="btnguardar" class="btn-main">Guardar Plato</button>
+                    </form>
+                </div>
 
-                        <div class="card-content">
-                            <div class="badge-container">
-                                <span class="badge-seccion"><?= $row['seccion'] ?></span>
-                                <span class="badge-categoria"><?= $row['categoria'] ?></span>
-                            </div>
-
-                            <h4 class="card-title"><?= htmlspecialchars($row['nombre']) ?></h4>
-
-                            <div class="card-actions">
-                                <a href="javascript:void(0)" onclick='abrirEditor(<?= json_encode($row) ?>)'
-                                    class="btn-card btn-card-edit" title="Editar plato">
-                                    ✏️ Editar
-                                </a>
-                                <a href="?del=<?= $row['id'] ?>" class="btn-card btn-card-delete"
-                                    onclick="return confirm('¿Está seguro de eliminar este plato?')" title="Eliminar plato">
-                                    🗑️ Eliminar
-                                </a>
-                            </div>
+                <div class="filter-dashboard">
+                    <div class="filter-main">
+                        <input type="text" id="filter-search" placeholder="🔍 Buscar por nombre del plato...">
+                    </div>
+                    <div class="filter-options">
+                        <div class="filter-group">
+                            <label>Sección:</label>
+                            <select id="filter-seccion">
+                                <option value="all">Todas las secciones</option>
+                                <?php foreach ($secciones as $s): ?>
+                                    <option value="<?= $s ?>">
+                                        <?= $s ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Categoría:</label>
+                            <select id="filter-categoria">
+                                <option value="all">Todas las categorías</option>
+                            </select>
                         </div>
                     </div>
-                <?php endwhile;
-            endif; ?>
-        </div>
+                    <div class="filter-results">
+                        Mostrando <span id="visible-count">0</span> platos
+                    </div>
+                </div>
+
+                <!-- Listado de platos existentes -->
+                <div class="grid-platos">
+                    <?php
+                    $items = $conn->query("SELECT * FROM menu_seminario ORDER BY FIELD(seccion, 'ENTRADA', 'PLATO FUERTE', 'POSTRE'), categoria");
+
+                    if ($items->num_rows === 0): ?>
+                        <div class="empty-state">
+                            <h4>No hay platos registrados</h4>
+                            <p>Comienza agregando platos usando el formulario superior</p>
+                        </div>
+                    <?php else:
+                        while ($row = $items->fetch_assoc()):
+                            $img_src = (!empty($row['imagen_url']) && file_exists("../img/menu_seminario/" . $row['imagen_url']))
+                                ? "../img/menu_seminario/" . $row['imagen_url']
+                                : null;
+                            $seccion_class = '';
+                            if ($row['seccion'] == 'ENTRADA') {
+                                $seccion_class = 'seccion-entrada';
+                            } elseif ($row['seccion'] == 'PLATO FUERTE') {
+                                $seccion_class = 'seccion-plato';
+                            } else {
+                                $seccion_class = 'seccion-postre';
+                            }
+                            ?>
+                            <div class="card-plato <?= $seccion_class ?>">
+                                <div class="card-image">
+                                    <?php if ($img_src): ?>
+                                        <img src="<?= $img_src ?>" alt="<?= htmlspecialchars($row['nombre']) ?>"
+                                            onerror="this.parentElement.innerHTML='<div class=\'no-image\'><span>🍽️</span><span>Imagen no disponible</span></div>'">
+                                    <?php else: ?>
+                                        <div class="no-image">
+                                            <span>🍽️</span>
+                                            <span>Sin imagen</span>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+
+                                <div class="card-content">
+                                    <div class="badge-container">
+                                        <span class="badge-seccion"><?= $row['seccion'] ?></span>
+                                        <span class="badge-categoria"><?= $row['categoria'] ?></span>
+                                    </div>
+
+                                    <h4 class="card-title"><?= htmlspecialchars($row['nombre']) ?></h4>
+
+                                    <div class="card-actions">
+                                        <a href="javascript:void(0)" onclick='abrirEditor(<?= json_encode($row) ?>)'
+                                            class="btn-card btn-card-edit" title="Editar plato">
+                                            ✏️ Editar
+                                        </a>
+                                        <a href="?del=<?= $row['id'] ?>" class="btn-card btn-card-delete"
+                                            onclick="return confirm('¿Está seguro de eliminar este plato?')"
+                                            title="Eliminar plato">
+                                            🗑️ Eliminar
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endwhile;
+                    endif; ?>
+                </div>
+            </div>
+
+            <!-- MODAL DE EDICIÓN FLOTANTE -->
+            <div id="modalEdit">
+                <div class="modal-content">
+                    <h3>Editar Plato</h3>
+                    <form method="POST" enctype="multipart/form-data" id="formEditar">
+                        <input type="hidden" name="id" id="edit_id">
+
+                        <div class="form-group">
+                            <label>Nombre del Plato:</label>
+                            <input type="text" name="nombre" id="edit_nombre" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Sección:</label>
+                            <select name="seccion" id="edit_seccion"
+                                onchange="actualizarSubs(this.value, 'edit_cat', '')" required>
+                                <?php foreach ($secciones as $s): ?>
+                                    <option value="<?= $s ?>"><?= $s ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Categoría específica:</label>
+                            <select name="categoria" id="edit_cat" required>
+                                <option value="">Cargando...</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Nueva imagen (opcional):</label>
+                            <input type="file" name="foto" accept="image/*">
+                            <small style="color:var(--text-light); display:block; margin-top:5px;">
+                                Deje en blanco para mantener la imagen actual
+                            </small>
+                        </div>
+
+                        <button type="submit" name="btnguardar" class="btn-main">Actualizar</button>
+                        <button type="button" onclick="cerrarModal()" class="btn-cancel">Cancelar</button>
+                    </form>
+                </div>
+            </div>
+        </main>
     </div>
 
-    <!-- MODAL DE EDICIÓN FLOTANTE -->
-    <div id="modalEdit">
-        <div class="modal-content">
-            <h3>Editar Plato</h3>
-            <form method="POST" enctype="multipart/form-data" id="formEditar">
-                <input type="hidden" name="id" id="edit_id">
-
-                <div class="form-group">
-                    <label>Nombre del Plato:</label>
-                    <input type="text" name="nombre" id="edit_nombre" required>
-                </div>
-
-                <div class="form-group">
-                    <label>Sección:</label>
-                    <select name="seccion" id="edit_seccion" onchange="actualizarSubs(this.value, 'edit_cat', '')"
-                        required>
-                        <?php foreach ($secciones as $s): ?>
-                            <option value="<?= $s ?>"><?= $s ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Categoría específica:</label>
-                    <select name="categoria" id="edit_cat" required>
-                        <option value="">Cargando...</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Nueva imagen (opcional):</label>
-                    <input type="file" name="foto" accept="image/*">
-                    <small style="color:var(--text-light); display:block; margin-top:5px;">
-                        Deje en blanco para mantener la imagen actual
-                    </small>
-                </div>
-
-                <button type="submit" name="btnguardar" class="btn-main">Actualizar</button>
-                <button type="button" onclick="cerrarModal()" class="btn-cancel">Cancelar</button>
-            </form>
-        </div>
-    </div>
 
     <script>
         const categorias = <?= json_encode($categorias) ?>;

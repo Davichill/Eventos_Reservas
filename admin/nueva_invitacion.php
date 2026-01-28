@@ -1,10 +1,14 @@
 <?php
 include '../php/conexion.php';
 session_start();
+
 if (!isset($_SESSION['admin'])) {
     header("Location: login.php");
     exit();
 }
+
+// Obtener lista de clientes para el selector
+$clientes_query = $conn->query("SELECT id, cliente_nombre, cliente_apellido, razon_social, identificacion FROM clientes ORDER BY cliente_nombre ASC");
 ?>
 
 <!DOCTYPE html>
@@ -12,216 +16,181 @@ if (!isset($_SESSION['admin'])) {
 
 <head>
     <meta charset="UTF-8">
-    <title>Nueva Invitación - GO Quito</title>
-    <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="../css/nueva_invitacion.css">
-    <script>
-        function validarFormulario() {
-            // Obtener valores de los campos
-            const clienteNombre = document.querySelector('input[name="cliente_nombre"]').value.trim();
-            const clienteIdentificacion = document.querySelector('input[name="cliente_identificacion"]').value.trim();
-            const clienteTelefono = document.querySelector('input[name="cliente_telefono"]').value.trim();
-            const clienteEmail = document.querySelector('input[name="cliente_email"]').value.trim();
-            const idTipoEvento = document.querySelector('select[name="id_tipo_evento"]').value;
-            const cantidadPersonas = document.querySelector('input[name="cantidad_personas"]').value;
-            const fechaEvento = document.querySelector('input[name="fecha_evento"]').value;
-            
-            // Validar nombre
-            if (clienteNombre.length < 3) {
-                alert('El nombre debe tener al menos 3 caracteres');
-                return false;
-            }
-            
-            // Validar identificación (solo números, 10-13 dígitos)
-            const regexIdentificacion = /^\d{10,13}$/;
-            if (!regexIdentificacion.test(clienteIdentificacion)) {
-                alert('La identificación debe tener entre 10 y 13 dígitos numéricos');
-                return false;
-            }
-            
-            // Validar teléfono (solo números, 10 dígitos para Ecuador)
-            const regexTelefono = /^09\d{8}$/;
-            if (!regexTelefono.test(clienteTelefono)) {
-                alert('El teléfono debe tener 10 dígitos y comenzar con 09');
-                return false;
-            }
-            
-            // Validar email
-            const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!regexEmail.test(clienteEmail)) {
-                alert('Por favor ingrese un correo electrónico válido');
-                return false;
-            }
-            
-            // Validar tipo de evento
-            if (idTipoEvento === '') {
-                alert('Por favor seleccione un tipo de evento');
-                return false;
-            }
-            
-            // Validar cantidad de personas
-            if (cantidadPersonas < 1 || cantidadPersonas > 1000) {
-                alert('La cantidad de personas debe estar entre 1 y 1000');
-                return false;
-            }
-            
-            // Validar fecha (no puede ser anterior a hoy)
-            const hoy = new Date().toISOString().split('T')[0];
-            if (fechaEvento < hoy) {
-                alert('La fecha del evento no puede ser anterior a hoy');
-                return false;
-            }
-            
-            // Validar que la fecha no sea más de 2 años en el futuro
-            const fechaMaxima = new Date();
-            fechaMaxima.setFullYear(fechaMaxima.getFullYear() + 2);
-            const fechaMaximaStr = fechaMaxima.toISOString().split('T')[0];
-            
-            if (fechaEvento > fechaMaximaStr) {
-                alert('La fecha del evento no puede ser más de 2 años en el futuro');
-                return false;
-            }
-            
-            return true;
+    <title>Generar Invitación | GO Quito</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/gestion_menu/estilos_admin.css">
+
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+    <style>
+        .form-container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            max-width: 800px;
+            margin: 0 auto;
         }
-        
-        // Validación en tiempo real para teléfono
-        function validarTelefono(input) {
-            const valor = input.value.replace(/\D/g, ''); // Remover no números
-            if (valor.length > 10) {
-                input.value = valor.substring(0, 10);
-            } else {
-                input.value = valor;
-            }
+
+        .header-step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--azul-quito);
+            margin-bottom: 20px;
+            border-bottom: 2px solid #f4f4f4;
+            padding-bottom: 10px;
         }
-        
-        // Validación en tiempo real para identificación
-        function validarIdentificacion(input) {
-            const valor = input.value.replace(/\D/g, ''); // Remover no números
-            if (valor.length > 13) {
-                input.value = valor.substring(0, 13);
-            } else {
-                input.value = valor;
-            }
+
+        /* Ajuste para que Select2 combine con tu diseño */
+        .select2-container--default .select2-selection--single {
+            height: 45px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
         }
-        
-        // Validación en tiempo real para cantidad de personas
-        function validarCantidadPersonas(input) {
-            let valor = parseInt(input.value) || 1;
-            if (valor < 1) valor = 1;
-            if (valor > 1000) valor = 1000;
-            input.value = valor;
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 43px;
         }
-        
-        // Establecer fecha mínima (hoy) y máxima (2 años desde hoy)
-        window.onload = function() {
-            const hoy = new Date().toISOString().split('T')[0];
-            const fechaMaxima = new Date();
-            fechaMaxima.setFullYear(fechaMaxima.getFullYear() + 2);
-            const fechaMaximaStr = fechaMaxima.toISOString().split('T')[0];
-            
-            const fechaInput = document.querySelector('input[name="fecha_evento"]');
-            fechaInput.min = hoy;
-            fechaInput.max = fechaMaximaStr;
+
+        .grid-campos {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
         }
-    </script>
+
+        .campo-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .campo-group label {
+            font-weight: 600;
+            color: #555;
+            font-size: 0.9rem;
+        }
+
+        .campo-group input,
+        .campo-group select {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        .btn-regresar {
+            text-decoration: none;
+            color: var(--azul-quito);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .btn-generar {
+            background: var(--azul-quito);
+            color: white;
+            border: none;
+            padding: 15px;
+            width: 100%;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
 </head>
 
 <body>
-    <header>
-        <h1>Generar Enlace de Confirmación</h1>
-        <a href="dashboard.php" class="btn-login" style="color: #ff7675; text-decoration: none; font-size: 13px; font-weight: bold;">Volver al Panel</a>
-    </header>
+    <?php include '../includes/sidebar.php'; ?>
 
-    <main
-        style="max-width: 700px; margin: 40px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+    <div class="main-content">
+        <header class="top-bar" style="display: flex; justify-content: space-between; align-items: center;">
+            <a href="dashboard.php" class="btn-regresar">
+                <i class="fas fa-arrow-left"></i> Regresar al Dashboard
+            </a>
+            <span class="user-name">Módulo de Reservas Rápidas</span>
+        </header>
 
-        <?php if (isset($_GET['exito'])):
-            $url_cliente = "http://localhost/eventos-reservas/confirmar.php?token=" . $_GET['token'];
-            ?>
-            <div class="success-box">
-                <p style="color: #2e7d32; margin-top: 0; font-weight: bold;">✔ ¡Enlace generado con éxito!</p>
-                <p style="font-size: 0.9rem;">Copia este enlace y envíalo por WhatsApp o Correo al cliente:</p>
-                <input type="text" value="<?php echo htmlspecialchars($url_cliente); ?>" id="linkReserva" readonly class="input-copy">
-                <button onclick="copyLink()" class="btn-copy">Copiar Enlace</button>
+        <div class="content-body">
+            <div class="form-container">
+                <form action="crear_token.php" method="POST">
+                    <div class="header-step">
+                        <i class="fas fa-search"></i>
+                        <h2>Paso 1: Buscar y Seleccionar Cliente</h2>
+                    </div>
+
+                    <div class="campo-group" style="margin-bottom: 30px; width: 100%;">
+                        <label>Escribe el nombre o RUC del cliente:</label>
+                        <select name="id_cliente" id="buscador_cliente" style="width: 100%;" required>
+                            <option value="">Escribe para buscar...</option>
+                            <?php while ($c = $clientes_query->fetch_assoc()): ?>
+                                <option value="<?= $c['id'] ?>">
+                                    <?= htmlspecialchars($c['cliente_nombre'] . " " . $c['cliente_apellido'] . " | " . $c['identificacion'] . " (" . ($c['razon_social'] ?: 'Particular') . ")") ?>
+                                </option>
+                            <?php endwhile; ?>
+                        </select>
+                    </div>
+
+                    <div class="header-step">
+                        <i class="fas fa-calendar-day"></i>
+                        <h2>Paso 2: Detalles del Evento</h2>
+                    </div>
+
+                    <div class="grid-campos">
+                        <div class="campo-group">
+                            <label>Tipo de Evento</label>
+                            <select name="id_tipo_evento" required>
+                                <option value="">Seleccione...</option>
+                                <?php
+                                $tipos = $conn->query("SELECT * FROM tipos_evento ORDER BY nombre");
+                                while ($t = $tipos->fetch_assoc()) {
+                                    echo "<option value='{$t['id']}'>" . htmlspecialchars($t['nombre']) . "</option>";
+                                }
+                                ?>
+                            </select>
+                        </div>
+                        <div class="campo-group">
+                            <label>Fecha del Evento</label>
+                            <input type="date" name="fecha_evento" required min="<?= date('Y-m-d') ?>">
+                        </div>
+                        <div class="campo-group">
+                            <label>Cantidad de Personas (Pax)</label>
+                            <input type="number" name="cantidad_personas" min="1" max="1000" value="50" required>
+                        </div>
+                        <div class="campo-group">
+                            <label>Nota Interna</label>
+                            <input type="text" name="nota" placeholder="Ej: Confirmar salón principal">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-generar">
+                        <i class="fas fa-magic"></i> Generar Invitación
+                    </button>
+                </form>
             </div>
+        </div>
+    </div>
 
-            <script>
-                function copyLink() {
-                    var copyText = document.getElementById("linkReserva");
-                    copyText.select();
-                    copyText.setSelectionRange(0, 99999); // Para dispositivos móviles
-                    document.execCommand("copy");
-                    alert("Enlace copiado al portapapeles correctamente.");
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            // Inicializar el buscador inteligente
+            $('#buscador_cliente').select2({
+                placeholder: "Busca por nombre, RUC o empresa...",
+                allowClear: true,
+                language: {
+                    noResults: function () { return "No se encontró al cliente. Regístralo en el Directorio."; }
                 }
-            </script>
-        <?php endif; ?>
-
-        <form action="crear_token.php" method="POST" onsubmit="return validarFormulario()">
-            <section>
-                <h2>Datos de Contacto</h2>
-
-                <div class="campo-flex" style="margin-bottom: 20px;">
-                    <label>Nombre del Cliente / Empresa:</label>
-                    <input type="text" name="cliente_nombre" placeholder="Ej: Juan Pérez o Empresa XYZ" required
-                        minlength="3" maxlength="100">
-                </div>
-
-                <div class="seccion-flex">
-                    <div class="campo-flex">
-                        <label>Identificación (Cédula o RUC):</label>
-                        <input type="text" name="cliente_identificacion" placeholder="Ej: 1722334455" required
-                            autocomplete="off" pattern="\d{10,13}" title="10-13 dígitos numéricos"
-                            oninput="validarIdentificacion(this)">
-                    </div>
-                    <div class="campo-flex">
-                        <label>Número de Celular:</label>
-                        <input type="tel" name="cliente_telefono" placeholder="Ej: 0999099004" required
-                            pattern="09\d{8}" title="10 dígitos, comenzando con 09"
-                            oninput="validarTelefono(this)">
-                    </div>
-                </div>
-
-                <div class="campo-flex" style="margin-top: 15px;">
-                    <label>Correo Electrónico:</label>
-                    <input type="email" name="cliente_email" placeholder="ejemplo@correo.com" required
-                        maxlength="100">
-                </div>
-
-                <h2>Detalles del Evento</h2>
-
-                <div class="campo-flex" style="margin-bottom: 20px;">
-                    <label>Tipo de Evento:</label>
-                    <select name="id_tipo_evento" required>
-                        <option value="">Seleccione el tipo...</option>
-                        <?php
-                        $res = $conn->query("SELECT * FROM tipos_evento ORDER BY nombre");
-                        while ($row = $res->fetch_assoc()) {
-                            echo "<option value='" . $row['id'] . "'>" . htmlspecialchars($row['nombre']) . "</option>";
-                        }
-                        ?>
-                    </select>
-                </div>
-
-                <div class="seccion-flex">
-                    <div class="campo-flex">
-                        <label>Número de Personas (Pax):</label>
-                        <input type="number" name="cantidad_personas" min="1" max="1000" required
-                            value="1" oninput="validarCantidadPersonas(this)">
-                    </div>
-                    <div class="campo-flex">
-                        <label>Fecha del Evento:</label>
-                        <input type="date" name="fecha_evento" required>
-                    </div>
-                </div>
-            </section>
-
-            <button type="submit" class="btn-generar-premium"
-                style="width: 100%; margin-top: 30px; padding: 15px; background: #1a237e; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">
-                Generar Invitación y Link
-            </button>
-        </form>
-    </main>
+            });
+        });
+    </script>
 </body>
 
 </html>

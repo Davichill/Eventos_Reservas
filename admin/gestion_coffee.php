@@ -1,4 +1,5 @@
 <?php
+
 session_start();
 include_once __DIR__ . '/../php/conexion.php';
 
@@ -97,6 +98,7 @@ if (isset($_GET['del'])) {
     <meta charset="UTF-8">
     <title>Gestión Coffee Break | GO Hotel</title>
     <link rel="stylesheet" href="../css/gestion_menu/gestion_coffee.css">
+    <link rel="stylesheet" href="../css/gestion_menu/estilos_admin.css">
     <style>
         .filter-container {
             background: #fff;
@@ -153,168 +155,174 @@ if (isset($_GET['del'])) {
 </head>
 
 <body>
-    <?php include 'navbar.php'; ?>
+    <div class="admin-container">
+        <?php include '../includes/sidebar.php'; ?>
+        <main class="main-content">
+            <?php include 'navbar.php'; ?>
 
-    <?php if (isset($_GET['msj'])): ?>
-        <div class="status-message success">
-            ✅ Bocadito guardado correctamente
-        </div>
-    <?php endif; ?>
+            <?php if (isset($_GET['msj'])): ?>
+                <div class="status-message success">
+                    ✅ Bocadito guardado correctamente
+                </div>
+            <?php endif; ?>
 
-    <div class="main-container">
-        <div class="header-section">
-            <h1>Gestión de Coffee Break</h1>
-            <div class="header-info">
-                <div class="path-info">/img/menu_coffee/</div>
-                <span>Gestiona los bocaditos para coffee break según categorías del PDF</span>
-            </div>
-        </div>
+            <div class="main-container">
+                <div class="header-section">
+                    <h1>Gestión de Coffee Break</h1>
+                    <div class="header-info">
+                        <div class="path-info">/img/menu_coffee/</div>
+                        <span>Gestiona los bocaditos para coffee break según categorías del PDF</span>
+                    </div>
+                </div>
 
-        <!-- Formulario principal -->
-        <div class="form-box">
-            <h3>Registrar Nuevo Bocadito</h3>
-            <form method="POST" enctype="multipart/form-data" class="form-grid">
-                <div class="form-group">
-                    <label>Nombre del Bocadito:</label>
-                    <input type="text" name="nombre" id="crear_nombre" placeholder="Ej: Mini sándwich de jamón y queso"
-                        required title="Ingrese el nombre completo del bocadito">
-                </div>
-                <div class="form-group">
-                    <label>Categoría:</label>
-                    <select name="categoria" id="crear_cat" required>
-                        <option value="">Seleccione categoría...</option>
-                        <?php foreach ($categorias_coffee as $c): ?>
-                            <option value="<?= $c ?>"><?= $c ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Imagen:</label>
-                    <input type="file" name="foto" accept="image/*" required
-                        title="Suba una imagen del bocadito (JPG, PNG, GIF)">
-                </div>
-                <input type="hidden" name="id" value="0">
-                <button type="submit" name="btnguardar" class="btn-main">Guardar</button>
-            </form>
-        </div>
-
-        <!-- Listado de bocaditos -->
-        <div class="grid-bocaditos">
-            <div class="filter-container">
-                <div class="search-box">
-                    <input type="text" id="filter-search" placeholder="🔍 Buscar por nombre...">
-                </div>
-                <div class="category-filters">
-                    <button class="filter-btn active" data-filter="all">Todos</button>
-                    <?php foreach ($categorias_coffee as $c): ?>
-                        <button class="filter-btn" data-filter="<?= $c ?>">
-                            <?= $c ?>
-                        </button>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-            <?php
-            $items = $conn->query("SELECT * FROM menu_coffee_break ORDER BY categoria ASC, nombre ASC");
-
-            if ($items->num_rows == 0): ?>
-                <div class="empty-state">
-                    <h4>No hay bocaditos registrados</h4>
-                    <p>Comienza agregando bocaditos usando el formulario superior</p>
-                </div>
-            <?php else:
-                while ($row = $items->fetch_assoc()):
-                    $img_src = (!empty($row['imagen_url']) && file_exists("../img/menu_coffee/" . $row['imagen_url']))
-                        ? "../img/menu_coffee/" . $row['imagen_url']
-                        : null;
-
-                    // Determinar clase CSS según categoría
-                    $categoria_class = '';
-                    $categoria = strtolower($row['categoria']);
-                    if (strpos($categoria, 'sánduch') !== false) {
-                        $categoria_class = 'categoria-sandwiches';
-                    } elseif (strpos($categoria, 'empanad') !== false) {
-                        $categoria_class = 'categoria-empanadas';
-                    } elseif (strpos($categoria, 'vegetarian') !== false) {
-                        $categoria_class = 'categoria-vegetariano';
-                    } elseif (strpos($categoria, 'quich') !== false) {
-                        $categoria_class = 'categoria-quiches';
-                    } elseif (strpos($categoria, 'pasteler') !== false) {
-                        $categoria_class = 'categoria-pasteleria';
-                    } elseif (strpos($categoria, 'gallet') !== false) {
-                        $categoria_class = 'categoria-galletas';
-                    }
-                    ?>
-                    <div class="card-bocadito <?= $categoria_class ?>">
-                        <div class="card-image">
-                            <?php if ($img_src): ?>
-                                <img src="<?= $img_src ?>" alt="<?= htmlspecialchars($row['nombre']) ?>"
-                                    onerror="this.parentElement.innerHTML='<div class=\'no-image\'><span>☕</span><span>Imagen no disponible</span></div>'">
-                            <?php else: ?>
-                                <div class="no-image">
-                                    <span>☕</span>
-                                    <span>Sin imagen</span>
-                                </div>
-                            <?php endif; ?>
+                <!-- Formulario principal -->
+                <div class="form-box">
+                    <h3>Registrar Nuevo Bocadito</h3>
+                    <form method="POST" enctype="multipart/form-data" class="form-grid">
+                        <div class="form-group">
+                            <label>Nombre del Bocadito:</label>
+                            <input type="text" name="nombre" id="crear_nombre"
+                                placeholder="Ej: Mini sándwich de jamón y queso" required
+                                title="Ingrese el nombre completo del bocadito">
                         </div>
+                        <div class="form-group">
+                            <label>Categoría:</label>
+                            <select name="categoria" id="crear_cat" required>
+                                <option value="">Seleccione categoría...</option>
+                                <?php foreach ($categorias_coffee as $c): ?>
+                                    <option value="<?= $c ?>"><?= $c ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Imagen:</label>
+                            <input type="file" name="foto" accept="image/*" required
+                                title="Suba una imagen del bocadito (JPG, PNG, GIF)">
+                        </div>
+                        <input type="hidden" name="id" value="0">
+                        <button type="submit" name="btnguardar" class="btn-main">Guardar</button>
+                    </form>
+                </div>
 
-                        <div class="card-content">
-                            <div class="badge-container">
-                                <span class="badge-categoria"><?= $row['categoria'] ?></span>
-                            </div>
-
-                            <h4 class="card-title"><?= htmlspecialchars($row['nombre']) ?></h4>
-
-                            <div class="card-actions">
-                                <a href="javascript:void(0)" onclick='abrirEditor(<?= json_encode($row) ?>)'
-                                    class="btn-card btn-card-edit" title="Editar bocadito">
-                                    ✏️ Editar
-                                </a>
-                                <a href="?del=<?= $row['id'] ?>" class="btn-card btn-card-delete"
-                                    onclick="return confirm('¿Está seguro de eliminar este bocadito?')"
-                                    title="Eliminar bocadito">
-                                    🗑️ Eliminar
-                                </a>
-                            </div>
+                <!-- Listado de bocaditos -->
+                <div class="grid-bocaditos">
+                    <div class="filter-container">
+                        <div class="search-box">
+                            <input type="text" id="filter-search" placeholder="🔍 Buscar por nombre...">
+                        </div>
+                        <div class="category-filters">
+                            <button class="filter-btn active" data-filter="all">Todos</button>
+                            <?php foreach ($categorias_coffee as $c): ?>
+                                <button class="filter-btn" data-filter="<?= $c ?>">
+                                    <?= $c ?>
+                                </button>
+                            <?php endforeach; ?>
                         </div>
                     </div>
-                <?php endwhile;
-            endif; ?>
-        </div>
-    </div>
+                    <?php
+                    $items = $conn->query("SELECT * FROM menu_coffee_break ORDER BY categoria ASC, nombre ASC");
 
-    <!-- MODAL DE EDICIÓN FLOTANTE -->
-    <div id="modalEdit">
-        <div class="modal-content">
-            <h3>Editar Bocadito</h3>
-            <form method="POST" enctype="multipart/form-data" id="formEditar">
-                <input type="hidden" name="id" id="edit-id">
+                    if ($items->num_rows == 0): ?>
+                        <div class="empty-state">
+                            <h4>No hay bocaditos registrados</h4>
+                            <p>Comienza agregando bocaditos usando el formulario superior</p>
+                        </div>
+                    <?php else:
+                        while ($row = $items->fetch_assoc()):
+                            $img_src = (!empty($row['imagen_url']) && file_exists("../img/menu_coffee/" . $row['imagen_url']))
+                                ? "../img/menu_coffee/" . $row['imagen_url']
+                                : null;
 
-                <div class="form-group">
-                    <label>Nombre del Bocadito:</label>
-                    <input type="text" name="nombre" id="edit-nombre" required>
+                            // Determinar clase CSS según categoría
+                            $categoria_class = '';
+                            $categoria = strtolower($row['categoria']);
+                            if (strpos($categoria, 'sánduch') !== false) {
+                                $categoria_class = 'categoria-sandwiches';
+                            } elseif (strpos($categoria, 'empanad') !== false) {
+                                $categoria_class = 'categoria-empanadas';
+                            } elseif (strpos($categoria, 'vegetarian') !== false) {
+                                $categoria_class = 'categoria-vegetariano';
+                            } elseif (strpos($categoria, 'quich') !== false) {
+                                $categoria_class = 'categoria-quiches';
+                            } elseif (strpos($categoria, 'pasteler') !== false) {
+                                $categoria_class = 'categoria-pasteleria';
+                            } elseif (strpos($categoria, 'gallet') !== false) {
+                                $categoria_class = 'categoria-galletas';
+                            }
+                            ?>
+                            <div class="card-bocadito <?= $categoria_class ?>">
+                                <div class="card-image">
+                                    <?php if ($img_src): ?>
+                                        <img src="<?= $img_src ?>" alt="<?= htmlspecialchars($row['nombre']) ?>"
+                                            onerror="this.parentElement.innerHTML='<div class=\'no-image\'><span>☕</span><span>Imagen no disponible</span></div>'">
+                                    <?php else: ?>
+                                        <div class="no-image">
+                                            <span>☕</span>
+                                            <span>Sin imagen</span>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+
+                                <div class="card-content">
+                                    <div class="badge-container">
+                                        <span class="badge-categoria"><?= $row['categoria'] ?></span>
+                                    </div>
+
+                                    <h4 class="card-title"><?= htmlspecialchars($row['nombre']) ?></h4>
+
+                                    <div class="card-actions">
+                                        <a href="javascript:void(0)" onclick='abrirEditor(<?= json_encode($row) ?>)'
+                                            class="btn-card btn-card-edit" title="Editar bocadito">
+                                            ✏️ Editar
+                                        </a>
+                                        <a href="?del=<?= $row['id'] ?>" class="btn-card btn-card-delete"
+                                            onclick="return confirm('¿Está seguro de eliminar este bocadito?')"
+                                            title="Eliminar bocadito">
+                                            🗑️ Eliminar
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endwhile;
+                    endif; ?>
                 </div>
+            </div>
 
-                <div class="form-group">
-                    <label>Categoría:</label>
-                    <select name="categoria" id="edit-cat" required>
-                        <?php foreach ($categorias_coffee as $c): ?>
-                            <option value="<?= $c ?>"><?= $c ?></option>
-                        <?php endforeach; ?>
-                    </select>
+            <!-- MODAL DE EDICIÓN FLOTANTE -->
+            <div id="modalEdit">
+                <div class="modal-content">
+                    <h3>Editar Bocadito</h3>
+                    <form method="POST" enctype="multipart/form-data" id="formEditar">
+                        <input type="hidden" name="id" id="edit-id">
+
+                        <div class="form-group">
+                            <label>Nombre del Bocadito:</label>
+                            <input type="text" name="nombre" id="edit-nombre" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Categoría:</label>
+                            <select name="categoria" id="edit-cat" required>
+                                <?php foreach ($categorias_coffee as $c): ?>
+                                    <option value="<?= $c ?>"><?= $c ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Nueva imagen (opcional):</label>
+                            <input type="file" name="foto" accept="image/*">
+                            <small style="color:var(--text-light); display:block; margin-top:5px;">
+                                Deje en blanco para mantener la imagen actual
+                            </small>
+                        </div>
+
+                        <button type="submit" name="btnguardar" class="btn-main">Actualizar</button>
+                        <button type="button" onclick="cerrarModal()" class="btn-cancel">Cancelar</button>
+                    </form>
                 </div>
-
-                <div class="form-group">
-                    <label>Nueva imagen (opcional):</label>
-                    <input type="file" name="foto" accept="image/*">
-                    <small style="color:var(--text-light); display:block; margin-top:5px;">
-                        Deje en blanco para mantener la imagen actual
-                    </small>
-                </div>
-
-                <button type="submit" name="btnguardar" class="btn-main">Actualizar</button>
-                <button type="button" onclick="cerrarModal()" class="btn-cancel">Cancelar</button>
-            </form>
-        </div>
+            </div>
+        </main>
     </div>
 
     <script>

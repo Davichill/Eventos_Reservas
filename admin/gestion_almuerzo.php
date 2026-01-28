@@ -1,4 +1,5 @@
 <?php
+
 include_once __DIR__ . '/../php/conexion.php';
 session_start();
 
@@ -93,6 +94,7 @@ if (isset($_GET['del'])) {
     <meta charset="UTF-8">
     <title>Gestión Almuerzos | GO Quito</title>
     <link rel="stylesheet" href="../css/gestion_menu/gestion_almuerzo.css">
+    <link rel="stylesheet" href="../css/gestion_menu/estilos_admin.css">
     <style>
         .filter-dashboard {
             background: #fff;
@@ -153,186 +155,194 @@ if (isset($_GET['del'])) {
 </head>
 
 <body>
-    <?php include 'navbar.php'; ?>
+    <div class="admin-container">
+        <?php include '../includes/sidebar.php'; ?>
+        <main class="main-content">
+            <?php include 'navbar.php'; ?>
 
-    <?php if (isset($_GET['res'])): ?>
-        <div class="status-message <?= $_GET['res'] === 'ok' ? 'success' : 'error' ?>">
-            <?= $_GET['res'] === 'ok' ? '✅ Plato guardado correctamente' : '🗑️ Plato eliminado exitosamente' ?>
-        </div>
-    <?php endif; ?>
-
-    <div class="main-container">
-        <div class="header-section">
-            <h1>Administración de Almuerzos y Cenas</h1>
-            <div class="header-info">
-                <div class="path-info">/img/menu_almuerzo/</div>
-            </div>
-        </div>
-
-        <!-- Formulario principal -->
-        <div class="form-box">
-            <h3>Registrar Nuevo Plato</h3>
-            <form method="POST" enctype="multipart/form-data" class="form-grid">
-                <div class="form-group">
-                    <label>Nombre del plato:</label>
-                    <input type="text" name="nombre" id="crear_nombre"
-                        placeholder="Ej: Lomo Stroganoff, Ceviche Mixto, etc." required
-                        title="Ingrese el nombre completo del plato">
+            <?php if (isset($_GET['res'])): ?>
+                <div class="status-message <?= $_GET['res'] === 'ok' ? 'success' : 'error' ?>">
+                    <?= $_GET['res'] === 'ok' ? '✅ Plato guardado correctamente' : '🗑️ Plato eliminado exitosamente' ?>
                 </div>
-                <div class="form-group">
-                    <label>Tiempo:</label>
-                    <select name="tiempo" id="main-tiempo" onchange="cambiarSub(this.value, 'main-sub')" required>
-                        <option value="">Seleccione tiempo...</option>
-                        <option value="Entradas">🍽️ Entradas</option>
-                        <option value="Plato Fuerte">🍖 Plato Fuerte</option>
-                        <option value="Postres">🍰 Postres</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Subcategoría:</label>
-                    <select name="subcategoria" id="main-sub" required>
-                        <option value="">Primero elija tiempo</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Imagen:</label>
-                    <input type="file" name="imagen" accept="image/*" required
-                        title="Suba una imagen del plato (JPG, PNG, GIF)">
-                </div>
-                <input type="hidden" name="id" value="0">
-                <button type="submit" name="guardar" class="btn-main">Guardar</button>
-            </form>
-        </div>
+            <?php endif; ?>
 
-        <div class="filter-dashboard">
-            <div class="filter-group-main">
-                <input type="text" id="filter-search" placeholder="🔍 Buscar plato por nombre...">
-            </div>
-
-            <div class="filter-group-options">
-                <div class="filter-select-wrapper">
-                    <label>Tiempo:</label>
-                    <select id="filter-tiempo">
-                        <option value="all">Todos los tiempos</option>
-                        <option value="Entradas">🍽️ Entradas</option>
-                        <option value="Plato Fuerte">🍖 Plato Fuerte</option>
-                        <option value="Postres">🍰 Postres</option>
-                    </select>
+            <div class="main-container">
+                <div class="header-section">
+                    <h1>Administración de Almuerzos y Cenas</h1>
+                    <div class="header-info">
+                        <div class="path-info">/img/menu_almuerzo/</div>
+                    </div>
                 </div>
 
-                <div class="filter-select-wrapper">
-                    <label>Subcategoría:</label>
-                    <select id="filter-sub">
-                        <option value="all">Todas las subcategorías</option>
-                    </select>
+                <!-- Formulario principal -->
+                <div class="form-box">
+                    <h3>Registrar Nuevo Plato</h3>
+                    <form method="POST" enctype="multipart/form-data" class="form-grid">
+                        <div class="form-group">
+                            <label>Nombre del plato:</label>
+                            <input type="text" name="nombre" id="crear_nombre"
+                                placeholder="Ej: Lomo Stroganoff, Ceviche Mixto, etc." required
+                                title="Ingrese el nombre completo del plato">
+                        </div>
+                        <div class="form-group">
+                            <label>Tiempo:</label>
+                            <select name="tiempo" id="main-tiempo" onchange="cambiarSub(this.value, 'main-sub')"
+                                required>
+                                <option value="">Seleccione tiempo...</option>
+                                <option value="Entradas">🍽️ Entradas</option>
+                                <option value="Plato Fuerte">🍖 Plato Fuerte</option>
+                                <option value="Postres">🍰 Postres</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Subcategoría:</label>
+                            <select name="subcategoria" id="main-sub" required>
+                                <option value="">Primero elija tiempo</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Imagen:</label>
+                            <input type="file" name="imagen" accept="image/*" required
+                                title="Suba una imagen del plato (JPG, PNG, GIF)">
+                        </div>
+                        <input type="hidden" name="id" value="0">
+                        <button type="submit" name="guardar" class="btn-main">Guardar</button>
+                    </form>
                 </div>
-            </div>
 
-            <div class="filter-stats">
-                Mostrando <span id="count-visible">0</span> platos
-            </div>
-        </div>
-        <!-- Listado de platos -->
-        <div class="grid-platos">
-            <?php
-            $platos = $conn->query("SELECT * FROM menu_almuerzo_cena ORDER BY tiempo, subcategoria");
+                <div class="filter-dashboard">
+                    <div class="filter-group-main">
+                        <input type="text" id="filter-search" placeholder="🔍 Buscar plato por nombre...">
+                    </div>
 
-            if ($platos->num_rows === 0): ?>
-                <div class="empty-state">
-                    <h4>No hay platos registrados</h4>
-                    <p>Comienza agregando platos usando el formulario superior</p>
-                </div>
-            <?php else:
-                while ($p = $platos->fetch_assoc()):
-                    $img_src = $carpeta_destino . $p['imagen_url'];
-                    $img_exists = file_exists($img_src);
-                    $tiempo_class = '';
-                    if ($p['tiempo'] == 'Entradas') {
-                        $tiempo_class = 'tiempo-entradas';
-                    } elseif ($p['tiempo'] == 'Plato Fuerte') {
-                        $tiempo_class = 'tiempo-plato';
-                    } else {
-                        $tiempo_class = 'tiempo-postres';
-                    }
-                    ?>
-                    <div class="card <?= $tiempo_class ?>">
-                        <div class="card-image">
-                            <?php if ($img_exists): ?>
-                                <img src="<?= $img_src ?>" alt="<?= htmlspecialchars($p['nombre']) ?>"
-                                    onerror="this.parentElement.innerHTML='<div class=\'no-image\'><span>🍽️</span><span>Imagen no disponible</span></div>'">
-                            <?php else: ?>
-                                <div class="no-image">
-                                    <span>🍽️</span>
-                                    <span>Sin imagen</span>
-                                </div>
-                            <?php endif; ?>
+                    <div class="filter-group-options">
+                        <div class="filter-select-wrapper">
+                            <label>Tiempo:</label>
+                            <select id="filter-tiempo">
+                                <option value="all">Todos los tiempos</option>
+                                <option value="Entradas">🍽️ Entradas</option>
+                                <option value="Plato Fuerte">🍖 Plato Fuerte</option>
+                                <option value="Postres">🍰 Postres</option>
+                            </select>
                         </div>
 
-                        <div class="card-content">
-                            <div class="badge-container">
-                                <span class="badge-tiempo"><?= $p['tiempo'] ?></span>
-                                <span class="badge-subcategoria"><?= $p['subcategoria'] ?></span>
-                            </div>
-
-                            <h4 class="card-title"><?= htmlspecialchars($p['nombre']) ?></h4>
-
-                            <div class="card-actions">
-                                <a href="javascript:void(0)" onclick='abrirEditor(<?= json_encode($p) ?>)'
-                                    class="btn-card btn-card-edit" title="Editar plato">
-                                    ✏️ Editar
-                                </a>
-                                <a href="?del=<?= $p['id'] ?>" class="btn-card btn-card-delete"
-                                    onclick="return confirm('¿Está seguro de eliminar este plato?')" title="Eliminar plato">
-                                    🗑️ Eliminar
-                                </a>
-                            </div>
+                        <div class="filter-select-wrapper">
+                            <label>Subcategoría:</label>
+                            <select id="filter-sub">
+                                <option value="all">Todas las subcategorías</option>
+                            </select>
                         </div>
                     </div>
-                <?php endwhile;
-            endif; ?>
-        </div>
-    </div>
 
-    <!-- MODAL DE EDICIÓN FLOTANTE -->
-    <div id="modalEdit">
-        <div class="modal-content">
-            <h3>Editar Plato</h3>
-            <form method="POST" enctype="multipart/form-data" id="formEditar">
-                <input type="hidden" name="id" id="edit-id">
-
-                <div class="form-group">
-                    <label>Nombre del plato:</label>
-                    <input type="text" name="nombre" id="edit-nombre" required>
+                    <div class="filter-stats">
+                        Mostrando <span id="count-visible">0</span> platos
+                    </div>
                 </div>
+                <!-- Listado de platos -->
+                <div class="grid-platos">
+                    <?php
+                    $platos = $conn->query("SELECT * FROM menu_almuerzo_cena ORDER BY tiempo, subcategoria");
 
-                <div class="form-group">
-                    <label>Tiempo:</label>
-                    <select name="tiempo" id="edit-tiempo" onchange="cambiarSub(this.value, 'edit-sub', '')" required>
-                        <option value="Entradas">🍽️ Entradas</option>
-                        <option value="Plato Fuerte">🍖 Plato Fuerte</option>
-                        <option value="Postres">🍰 Postres</option>
-                    </select>
+                    if ($platos->num_rows === 0): ?>
+                        <div class="empty-state">
+                            <h4>No hay platos registrados</h4>
+                            <p>Comienza agregando platos usando el formulario superior</p>
+                        </div>
+                    <?php else:
+                        while ($p = $platos->fetch_assoc()):
+                            $img_src = $carpeta_destino . $p['imagen_url'];
+                            $img_exists = file_exists($img_src);
+                            $tiempo_class = '';
+                            if ($p['tiempo'] == 'Entradas') {
+                                $tiempo_class = 'tiempo-entradas';
+                            } elseif ($p['tiempo'] == 'Plato Fuerte') {
+                                $tiempo_class = 'tiempo-plato';
+                            } else {
+                                $tiempo_class = 'tiempo-postres';
+                            }
+                            ?>
+                            <div class="card <?= $tiempo_class ?>">
+                                <div class="card-image">
+                                    <?php if ($img_exists): ?>
+                                        <img src="<?= $img_src ?>" alt="<?= htmlspecialchars($p['nombre']) ?>"
+                                            onerror="this.parentElement.innerHTML='<div class=\'no-image\'><span>🍽️</span><span>Imagen no disponible</span></div>'">
+                                    <?php else: ?>
+                                        <div class="no-image">
+                                            <span>🍽️</span>
+                                            <span>Sin imagen</span>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+
+                                <div class="card-content">
+                                    <div class="badge-container">
+                                        <span class="badge-tiempo"><?= $p['tiempo'] ?></span>
+                                        <span class="badge-subcategoria"><?= $p['subcategoria'] ?></span>
+                                    </div>
+
+                                    <h4 class="card-title"><?= htmlspecialchars($p['nombre']) ?></h4>
+
+                                    <div class="card-actions">
+                                        <a href="javascript:void(0)" onclick='abrirEditor(<?= json_encode($p) ?>)'
+                                            class="btn-card btn-card-edit" title="Editar plato">
+                                            ✏️ Editar
+                                        </a>
+                                        <a href="?del=<?= $p['id'] ?>" class="btn-card btn-card-delete"
+                                            onclick="return confirm('¿Está seguro de eliminar este plato?')"
+                                            title="Eliminar plato">
+                                            🗑️ Eliminar
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endwhile;
+                    endif; ?>
                 </div>
+            </div>
 
-                <div class="form-group">
-                    <label>Subcategoría:</label>
-                    <select name="subcategoria" id="edit-sub" required>
-                        <option value="">Cargando...</option>
-                    </select>
+            <!-- MODAL DE EDICIÓN FLOTANTE -->
+            <div id="modalEdit">
+                <div class="modal-content">
+                    <h3>Editar Plato</h3>
+                    <form method="POST" enctype="multipart/form-data" id="formEditar">
+                        <input type="hidden" name="id" id="edit-id">
+
+                        <div class="form-group">
+                            <label>Nombre del plato:</label>
+                            <input type="text" name="nombre" id="edit-nombre" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Tiempo:</label>
+                            <select name="tiempo" id="edit-tiempo" onchange="cambiarSub(this.value, 'edit-sub', '')"
+                                required>
+                                <option value="Entradas">🍽️ Entradas</option>
+                                <option value="Plato Fuerte">🍖 Plato Fuerte</option>
+                                <option value="Postres">🍰 Postres</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Subcategoría:</label>
+                            <select name="subcategoria" id="edit-sub" required>
+                                <option value="">Cargando...</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Nueva imagen (opcional):</label>
+                            <input type="file" name="imagen" accept="image/*">
+                            <small style="color:var(--text-light); display:block; margin-top:5px;">
+                                Deje en blanco para mantener la imagen actual
+                            </small>
+                        </div>
+
+                        <button type="submit" name="guardar" class="btn-main">Actualizar</button>
+                        <button type="button" onclick="cerrarModal()" class="btn-cancel">Cancelar</button>
+                    </form>
                 </div>
-
-                <div class="form-group">
-                    <label>Nueva imagen (opcional):</label>
-                    <input type="file" name="imagen" accept="image/*">
-                    <small style="color:var(--text-light); display:block; margin-top:5px;">
-                        Deje en blanco para mantener la imagen actual
-                    </small>
-                </div>
-
-                <button type="submit" name="guardar" class="btn-main">Actualizar</button>
-                <button type="button" onclick="cerrarModal()" class="btn-cancel">Cancelar</button>
-            </form>
-        </div>
+            </div>
+        </main>
     </div>
 
     <script>
