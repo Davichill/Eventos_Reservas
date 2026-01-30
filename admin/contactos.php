@@ -185,7 +185,7 @@ if (!isset($_SESSION['admin'])) {
                                     </td>
                                     <td style="text-align: center;">
                                         <div class="action-container">
-                                            <a href="eventos.php?id_cliente=<?= $c['id'] ?>" 
+                                            <a href="nueva_invitacion.php?id_cliente=<?= $c['id'] ?>" 
                                                class="action-btn" 
                                                onclick="event.stopPropagation();" 
                                                title="Nueva Reserva">

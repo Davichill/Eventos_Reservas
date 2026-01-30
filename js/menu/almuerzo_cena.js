@@ -1,139 +1,192 @@
 // Variables globales
-    let globalMax = 0;
-    const mainCont = document.getElementById('contenedor-menu-cena');
-    const seccionSorbet = document.getElementById('seccion-sorbet');
-    
-    // Objeto para mapear categorías con nombres más amigables
-    const categoriasNombres = {
-        'Entradas': 'Entrada',
-        'Plato Fuerte': 'Plato Principal',
-        'Postres': 'Postre',
-        'Sorbet': 'Sorbet'
-    };
+let globalMax = 0;
+let maxDisplay = 0;
+const mainCont = document.getElementById('contenedor-menu-cena');
+let hoverTimeout = null;
+let currentHoverItem = null;
+let isTransitioning = false;
 
-    // Función para actualizar la vista previa
-    function actualizarPrevisualizacion(imagenUrl, nombrePlato) {
-        const previewImg = document.getElementById('preview-image');
-        const previewTitle = document.getElementById('preview-title');
-        const previewDesc = document.getElementById('preview-description');
-        
-        // Fade out
-        previewImg.style.opacity = '0.5';
+// Función para contar cuántas secciones únicas hay disponibles
+function contarSeccionesDisponibles() {
+    const gruposUnicos = new Set();
+    const checkboxes = mainCont.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(cb => {
+        gruposUnicos.add(cb.dataset.group);
+    });
+    return gruposUnicos.size;
+}
+
+// Función optimizada para actualizar vista previa
+function actualizarPrevisualizacion(item) {
+    if (!item || item.classList.contains('disabled') || isTransitioning) return;
+    
+    isTransitioning = true;
+    
+    const img = item.getAttribute('data-img') || 'img/no-image.png';
+    const nombre = item.getAttribute('data-nombre') || 'Seleccione un plato';
+    const guarnicion = item.getAttribute('data-guarnicion') || '';
+    const vegetales = item.getAttribute('data-vegetales') || '';
+    const tiempo = item.getAttribute('data-tiempo');
+    
+    const previewImg = document.getElementById('preview-image');
+    const previewTitle = document.getElementById('preview-title');
+    const detailGuarnicion = document.getElementById('detail-guarnicion');
+    const detailVegetales = document.getElementById('detail-vegetales');
+    const previewDetails = document.getElementById('preview-details');
+    
+    // Solo hacer fade si la imagen cambia
+    const currentSrc = previewImg.src;
+    const newSrc = img.startsWith('http') ? img : (window.location.origin + '/' + img);
+    
+    if (currentSrc !== newSrc && !currentSrc.endsWith(img)) {
+        previewImg.style.opacity = '0.3';
         
         setTimeout(() => {
-            previewImg.src = imagenUrl;
-            previewImg.alt = nombrePlato;
+            previewImg.src = img;
             previewImg.style.opacity = '1';
-            
-            previewTitle.textContent = nombrePlato;
-            
-            // Descripción predeterminada
-            previewDesc.textContent = 'Plato delicioso preparado por nuestros chefs.';
-        }, 100);
+        }, 200);
     }
+    
+    // Actualizar texto inmediatamente
+    previewTitle.textContent = nombre;
+    
+    // Mostrar detalles solo si es plato fuerte y tiene información
+    if (tiempo === 'Plato Fuerte' && (guarnicion || vegetales)) {
+        previewDetails.style.display = 'block';
+        detailGuarnicion.textContent = guarnicion || '-';
+        detailVegetales.textContent = vegetales || '-';
+    } else {
+        previewDetails.style.display = 'none';
+    }
+    
+    setTimeout(() => {
+        isTransitioning = false;
+    }, 300);
+}
 
-    // Función para actualizar el resumen de selección
-    function actualizarResumenSeleccion() {
-        const selectedItems = mainCont.querySelectorAll('input[type="checkbox"]:checked');
-        const container = document.getElementById('selected-items');
-        const selectedCount = document.getElementById('selected-count');
+// Función para activar el menú
+function activarMenu(n) {
+    const seccionesDisponibles = contarSeccionesDisponibles();
+    
+    // Si el usuario quiere más selecciones de las secciones disponibles, ajustamos
+    const maxSelecciones = Math.min(n, seccionesDisponibles);
+    
+    globalMax = maxSelecciones;
+    maxDisplay = n; // Guardamos lo que se muestra
+    
+    // Actualizar contador máximo (mostramos lo que pidió, aunque no pueda seleccionar todo)
+    document.getElementById('max-selections').textContent = maxDisplay;
+    
+    // Si hay discrepancia, mostrar advertencia
+    if (n > seccionesDisponibles) {
+        console.warn(`El menú de ${n} tiempos solo permite ${seccionesDisponibles} selecciones`);
+    }
+    
+    // Activar contenedor
+    mainCont.style.opacity = "1";
+    mainCont.style.pointerEvents = "auto";
+    
+    // Resetear todas las selecciones
+    const checks = mainCont.querySelectorAll('input[type="checkbox"]');
+    checks.forEach(c => {
+        c.checked = false;
+        c.disabled = false;
+        c.closest('.item-cena').classList.remove('disabled');
+    });
+    
+    // Resetear vista previa
+    const previewImg = document.getElementById('preview-image');
+    previewImg.style.opacity = '0.5';
+    setTimeout(() => {
+        previewImg.src = 'img/no-image.png';
+        previewImg.style.opacity = '1';
+        document.getElementById('preview-title').textContent = 'Seleccione un plato';
+        document.getElementById('preview-details').style.display = 'none';
+        document.getElementById('selected-count').textContent = '0';
+    }, 150);
+}
+
+// Event listener para hover con throttling
+if (mainCont) {
+    mainCont.addEventListener('mouseover', function(e) {
+        const item = e.target.closest('.item-cena');
         
-        selectedCount.textContent = selectedItems.length;
+        if (!item || item === currentHoverItem || item.classList.contains('disabled')) return;
         
-        if (selectedItems.length === 0) {
-            container.innerHTML = '<p class="empty-selection">Aún no ha seleccionado platos</p>';
-            return;
+        // Cancelar timeout anterior
+        if (hoverTimeout) {
+            clearTimeout(hoverTimeout);
         }
         
-        let html = '';
-        selectedItems.forEach(input => {
-            const nombre = input.value;
-            const categoria = categoriasNombres[input.dataset.group] || input.dataset.group;
-            
-            html += `
-                <div class="selected-item">
-                    <div class="selected-item-name">${nombre}</div>
-                    <div class="selected-item-category">${categoria}</div>
-                </div>
-            `;
-        });
-        
-        container.innerHTML = html;
-    }
-
-    // Función para activar el menú
-    function activarMenu(n) {
-        globalMax = n;
-        
-        // Actualizar contador máximo
-        document.getElementById('max-selections').textContent = n;
-        
-        // Mostrar u ocultar sección de sorbet
-        if (n === 4) {
-            seccionSorbet.style.display = 'block';
-        } else {
-            seccionSorbet.style.display = 'none';
-            // Desmarcar sorbet si estaba seleccionado
-            const sorbetCheck = seccionSorbet.querySelector('input[type="checkbox"]');
-            if (sorbetCheck) sorbetCheck.checked = false;
+        // Actualizar inmediatamente si no hay timeout activo
+        if (!hoverTimeout) {
+            actualizarPrevisualizacion(item);
+            currentHoverItem = item;
         }
         
-        // Activar contenedor
-        mainCont.style.opacity = "1";
-        mainCont.style.pointerEvents = "auto";
-        
-        // Resetear todas las selecciones
-        const checks = mainCont.querySelectorAll('input[type="checkbox"]');
-        checks.forEach(c => {
-            c.checked = false;
-            c.disabled = false;
-            c.closest('.item-cena').classList.remove('disabled');
-        });
-        
-        // Actualizar resumen
-        actualizarResumenSeleccion();
-    }
+        // Establecer timeout para prevenir actualizaciones rápidas
+        hoverTimeout = setTimeout(() => {
+            hoverTimeout = null;
+        }, 50);
+    });
 
-    // Event listener para cambios en las selecciones
-    mainCont.addEventListener('change', function (e) {
+    // Limpiar timeout al salir
+    mainCont.addEventListener('mouseout', function(e) {
+        const item = e.target.closest('.item-cena');
+        if (item && hoverTimeout) {
+            clearTimeout(hoverTimeout);
+            hoverTimeout = null;
+        }
+    });
+
+    // Event listener para cambios en checkboxes
+    mainCont.addEventListener('change', function(e) {
         if (e.target.type !== 'checkbox') return;
 
+        const checkbox = e.target;
+        const item = checkbox.closest('.item-cena');
+        const grupo = checkbox.dataset.group;
         const seleccionados = mainCont.querySelectorAll('input:checked');
-        const grupo = e.target.dataset.group;
-        const checksDelMismoGrupo = mainCont.querySelectorAll(`input[data-group="${grupo}"]`);
-
+        
+        // Validar límite global
         if (seleccionados.length > globalMax) {
-            e.target.checked = false;
-            alert("Su plan permite máximo " + globalMax + " selecciones.");
+            checkbox.checked = false;
+            
+            // Mensaje más claro si hay discrepancia
+            let mensaje = `Su plan permite máximo ${globalMax} selecciones`;
+            if (maxDisplay > globalMax) {
+                mensaje += ` (de ${maxDisplay} tiempos anunciados)`;
+            }
+            alert(mensaje + ".");
             return;
         }
 
         // Lógica de 1 plato por tiempo (data-group)
+        const checksDelMismoGrupo = mainCont.querySelectorAll(`input[data-group="${grupo}"]`);
+        
         checksDelMismoGrupo.forEach(cb => {
-            if (cb !== e.target) {
-                if (e.target.checked) {
+            const cbItem = cb.closest('.item-cena');
+            if (cb !== checkbox) {
+                if (checkbox.checked) {
                     cb.disabled = true;
-                    cb.closest('.item-cena').classList.add('disabled');
+                    cbItem.classList.add('disabled');
                 } else {
-                    if (seleccionados.length < globalMax) {
-                        cb.disabled = false;
-                        cb.closest('.item-cena').classList.remove('disabled');
-                    }
+                    cb.disabled = false;
+                    cbItem.classList.remove('disabled');
                 }
             }
         });
 
         // Lógica de límite global
-        const todosLosChecks = mainCont.querySelectorAll('input[type="checkbox"]');
-        if (mainCont.querySelectorAll('input:checked').length >= globalMax) {
-            todosLosChecks.forEach(c => {
+        if (seleccionados.length >= globalMax) {
+            mainCont.querySelectorAll('input[type="checkbox"]').forEach(c => {
                 if (!c.checked) {
                     c.disabled = true;
                     c.closest('.item-cena').classList.add('disabled');
                 }
             });
         } else {
-            todosLosChecks.forEach(c => {
+            mainCont.querySelectorAll('input[type="checkbox"]').forEach(c => {
                 const g = c.dataset.group;
                 const hayMarcadoEnGrupo = mainCont.querySelector(`input[data-group="${g}"]:checked`);
                 if (!hayMarcadoEnGrupo) {
@@ -143,36 +196,49 @@
             });
         }
 
-        // Actualizar el resumen de selección
-        actualizarResumenSeleccion();
-        
-        // Si se selecciona este plato, mostrar en vista previa
-        if (e.target.checked) {
-            const label = e.target.closest('.item-cena');
-            const nombre = e.target.value;
-            // Intentar obtener la imagen del atributo onmouseover
-            const onmouseover = label.getAttribute('onmouseover') || '';
-            const match = onmouseover.match(/actualizarPrevisualizacion\('([^']+)',/);
-            const imagenUrl = match ? match[1] : '../img/no-image.png';
-            actualizarPrevisualizacion(imagenUrl, nombre);
+        // Actualizar vista previa si se selecciona
+        if (checkbox.checked) {
+            actualizarPrevisualizacion(item);
         }
+        
+        // Actualizar contador
+        document.getElementById('selected-count').textContent = seleccionados.length;
     });
+}
 
-    // Event listener para hover sobre los items
-    document.addEventListener('DOMContentLoaded', function() {
-        const items = document.querySelectorAll('.item-cena');
-        items.forEach(item => {
-            item.addEventListener('mouseenter', function() {
-                if (!this.classList.contains('disabled')) {
-                    const input = this.querySelector('input');
-                    if (input && !input.disabled) {
-                        const nombre = this.querySelector('span').textContent;
-                        const onmouseover = this.getAttribute('onmouseover') || '';
-                        const match = onmouseover.match(/actualizarPrevisualizacion\('([^']+)',/);
-                        const imagenUrl = match ? match[1] : '../img/no-image.png';
-                        actualizarPrevisualizacion(imagenUrl, nombre);
-                    }
-                }
-            });
+// Inicializar
+document.addEventListener('DOMContentLoaded', function() {
+    // Asegurar que los detalles estén cerrados por defecto
+    const details = document.querySelectorAll('details.seccion-maestra');
+    details.forEach(detail => {
+        detail.open = false;
+    });
+    
+    // Contar secciones disponibles al cargar
+    const seccionesDisponibles = mainCont ? contarSeccionesDisponibles() : 0;
+    console.log(`Secciones disponibles: ${seccionesDisponibles}`);
+    
+    // Configurar vista previa inicial con transición suave
+    const previewImg = document.getElementById('preview-image');
+    if (previewImg) {
+        previewImg.style.opacity = '0';
+        setTimeout(() => {
+            previewImg.src = 'img/no-image.png';
+            previewImg.style.opacity = '1';
+            if (document.getElementById('preview-title')) {
+                document.getElementById('preview-title').textContent = 'Seleccione un plato';
+            }
+        }, 100);
+    }
+    
+    // Prevenir doble clic en checkboxes
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(cb => {
+        cb.addEventListener('click', function(e) {
+            if (this.disabled) {
+                e.preventDefault();
+                return false;
+            }
         });
     });
+});

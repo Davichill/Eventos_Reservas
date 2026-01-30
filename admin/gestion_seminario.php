@@ -40,6 +40,8 @@ if (isset($_POST['btnguardar'])) {
     $cat = $conn->real_escape_string($_POST['categoria']);
 
     $foto_sql = "";
+    $foto_nombre = null; // Inicializamos
+
     if (!empty($_FILES['foto']['name'])) {
         $foto_nombre = time() . "_" . $_FILES['foto']['name'];
         if (move_uploaded_file($_FILES['foto']['tmp_name'], "../img/menu_seminario/" . $foto_nombre)) {
@@ -55,6 +57,7 @@ if (isset($_POST['btnguardar'])) {
         }
     } else {
         // --- LOG DE CREACIÓN ---
+        // CAMBIO: Ahora permite NULL si no se sube imagen
         $img_val = !empty($foto_nombre) ? "'$foto_nombre'" : "NULL";
         $sql = "INSERT INTO menu_seminario (nombre, seccion, categoria, imagen_url) VALUES ('$nombre', '$seccion', '$cat', $img_val)";
         if ($conn->query($sql)) {
@@ -163,6 +166,14 @@ if (isset($_GET['del'])) {
     <div class="admin-container">
         <?php include '../includes/sidebar.php'; ?>
         <main class="main-content">
+            <header class="top-bar">
+                <div class="user-info">
+                    <span>Bienvenido, <span class="user-name">
+                            <?= $_SESSION['admin_nombre'] ?? 'Admin' ?>
+                        </span></span>
+                    <a href="../auth/logout.php" class="btn-logout">Cerrar Sesión</a>
+                </div>
+            </header>
             <?php include 'navbar.php'; ?>
 
             <?php if (isset($_GET['msj'])): ?>
@@ -180,7 +191,6 @@ if (isset($_GET['del'])) {
                     </div>
                 </div>
 
-                <!-- Formulario principal para crear nuevos platos -->
                 <div class="form-box">
                     <h3>Registrar Nuevo Plato</h3>
                     <form method="POST" enctype="multipart/form-data" class="form-grid">
@@ -207,8 +217,8 @@ if (isset($_GET['del'])) {
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Imagen:</label>
-                            <input type="file" name="foto" accept="image/*" required
+                            <label>Imagen (Opcional):</label>
+                            <input type="file" name="foto" accept="image/*"
                                 title="Suba una imagen del plato (JPG, PNG, GIF)">
                         </div>
                         <input type="hidden" name="id" value="0">
@@ -244,7 +254,6 @@ if (isset($_GET['del'])) {
                     </div>
                 </div>
 
-                <!-- Listado de platos existentes -->
                 <div class="grid-platos">
                     <?php
                     $items = $conn->query("SELECT * FROM menu_seminario ORDER BY FIELD(seccion, 'ENTRADA', 'PLATO FUERTE', 'POSTRE'), categoria");
@@ -307,7 +316,6 @@ if (isset($_GET['del'])) {
                 </div>
             </div>
 
-            <!-- MODAL DE EDICIÓN FLOTANTE -->
             <div id="modalEdit">
                 <div class="modal-content">
                     <h3>Editar Plato</h3>
@@ -351,7 +359,6 @@ if (isset($_GET['del'])) {
             </div>
         </main>
     </div>
-
 
     <script>
         const categorias = <?= json_encode($categorias) ?>;

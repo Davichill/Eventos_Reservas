@@ -104,6 +104,12 @@ if (isset($_GET['del'])) {
     <div class="admin-container">
         <?php include '../includes/sidebar.php'; ?>
         <main class="main-content">
+            <header class="top-bar">
+                <div class="user-info">
+                    <span>Bienvenido, <span class="user-name"><?= $_SESSION['admin_nombre'] ?? 'Admin' ?></span></span>
+                    <a href="../auth/logout.php" class="btn-logout">Cerrar Sesión</a>
+                </div>
+            </header>
             <?php include 'navbar.php'; ?>
 
             <?php if (isset($_GET['res'])): ?>

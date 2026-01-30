@@ -98,3 +98,11 @@ function resetVisor() {
         traducirPagina(window.currentLang || 'es');
     }
 }
+
+function toggleSeccion(elemento) {
+    // El padre de 'categoria-header' es 'categoria-seccion'
+    const seccion = elemento.parentElement;
+    
+    // Alternamos la clase que controla la visibilidad
+    seccion.classList.toggle('seccion-cerrada');
+}

@@ -9,14 +9,12 @@ if (!isset($_GET['token'])) {
 
 $token = $_GET['token'];
 
-// Manejo de Idioma
 if (isset($_GET['lang'])) {
     $_SESSION['lang'] = $_GET['lang'];
 }
 $lang = $_SESSION['lang'] ?? 'es';
 $t = $texts[$lang];
 
-// Consulta SQL (Sugerencia: Usa sentencias preparadas para mayor seguridad)
 $sql = "SELECT r.*, e.nombre as nombre_evento, c.cliente_nombre, c.cliente_telefono, c.cliente_email
         FROM reservas r 
         JOIN tipos_evento e ON r.id_tipo_evento = e.id 
@@ -36,9 +34,15 @@ if (!$reserva) {
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $t['confirmacion']; ?> - GO Quito Hotel</title>
     <link rel="stylesheet" href="css/confirmacion_cliente.css">
     <style>
+        :root {
+            --primary: #001f3f;
+            --accent: #d4af37;
+        }
+
         .lang-switcher {
             text-align: right;
             padding: 10px;
@@ -54,15 +58,39 @@ if (!$reserva) {
             border-radius: 4px;
         }
 
-        .lang-switcher a:hover {
-            background: rgba(255, 255, 255, 0.2);
+        /* Corrección de ancho: auto para que no se estire feo */
+        select {
+            width: 100%;
+            max-width: 300px;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+            background-color: white;
+            cursor: pointer;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        select:disabled {
+            background-color: #f0f0f0;
+            cursor: not-allowed;
+        }
+
+        .campo-flex {
+            margin-bottom: 15px;
+            flex: 1;
+            min-width: 250px;
         }
     </style>
 </head>
 
 <body>
 
-    <header style="background: #001f3f; color: white; padding: 20px; text-align: center;">
+    <header style="background: var(--primary); color: white; padding: 20px; text-align: center;">
         <div class="lang-switcher">
             <a href="?token=<?php echo $token; ?>&lang=es">🇪🇸 ES</a>
             <a href="?token=<?php echo $token; ?>&lang=en">🇺🇸 EN</a>
@@ -98,7 +126,6 @@ if (!$reserva) {
                             <input type="text" name="representante_legal" required>
                         </div>
                     </div>
-
                     <div class="seccion-flex">
                         <div class="campo-flex">
                             <label><?php echo $t['id_fiscal']; ?></label>
@@ -109,7 +136,6 @@ if (!$reserva) {
                             <input type="text" name="direccion_fiscal" required>
                         </div>
                     </div>
-
                     <div class="seccion-flex">
                         <div class="campo-flex">
                             <label><?php echo $t['tel_contacto']; ?></label>
@@ -121,20 +147,6 @@ if (!$reserva) {
                             <input type="email" name="correo_facturacion" required>
                         </div>
                     </div>
-
-                    <div style="border-top: 1px solid #eee; margin-top: 10px; padding-top: 15px;">
-                        <div class="seccion-flex">
-                            <div class="campo-flex">
-                                <label><?php echo $t['firma_nombre']; ?></label>
-                                <input type="text" name="firma_nombre" required>
-                            </div>
-                            <div class="campo-flex">
-                                <label><?php echo $t['firma_id']; ?></label>
-                                <input type="text" name="firma_identificacion" required>
-                            </div>
-                        </div>
-                    </div>
-
                     <div style="border-top: 1px solid #eee; margin-top: 10px; padding-top: 15px;">
                         <p style="font-weight: bold; color: #e67e22; margin-bottom: 10px;">
                             <?php echo $t['encargado_dia']; ?></p>
@@ -157,11 +169,15 @@ if (!$reserva) {
                 <div class="seccion-flex">
                     <div class="campo-flex">
                         <label><?php echo $t['h_inicio']; ?></label>
-                        <input type="time" name="hora_inicio" required>
+                        <select name="hora_inicio" id="hora_inicio" required></select>
                     </div>
                     <div class="campo-flex">
                         <label><?php echo $t['h_fin']; ?></label>
-                        <input type="time" name="hora_fin" required>
+                        <select name="hora_fin" id="hora_fin" required disabled>
+                            <option value="">
+                                <?php echo $lang == 'es' ? 'Seleccione inicio primero' : 'Select start first'; ?>
+                            </option>
+                        </select>
                     </div>
                 </div>
                 <div class="campo-flex">
@@ -174,7 +190,6 @@ if (!$reserva) {
                 <h2><?php echo $t['sec3_titulo']; ?></h2>
                 <div class="grid-opciones">
                     <?php
-                    // Las vistas de menú también deberían usar las variables $t si quieres traducirlas
                     switch ($reserva['id_tipo_evento']) {
                         case 1:
                             include 'vistas_menu/desayunos.php';
@@ -215,7 +230,6 @@ if (!$reserva) {
                         </label>
                     <?php endwhile; ?>
                 </div>
-
                 <div class="seccion-flex" style="margin-top:20px;">
                     <div class="campo-flex">
                         <label><?php echo $t['manteleria']; ?></label>
@@ -239,11 +253,11 @@ if (!$reserva) {
                 <h2><?php echo $t['sec5_titulo']; ?></h2>
                 <div class="campo-flex alerta-cocina" style="margin-bottom: 20px; padding: 15px;">
                     <label><?php echo $t['obs_cocina']; ?></label>
-                    <textarea name="observaciones" style="height: 80px;"></textarea>
+                    <textarea name="observaciones" style="height: 80px; width:100%;"></textarea>
                 </div>
                 <div class="campo-flex logistica-montaje" style="margin-bottom: 20px; padding: 15px;">
                     <label><?php echo $t['logistica']; ?></label>
-                    <textarea name="logistica" style="height: 80px;"></textarea>
+                    <textarea name="logistica" style="height: 80px; width:100%;"></textarea>
                 </div>
                 <div class="campo-flex"
                     style="background: #fdfdfd; border: 2px dashed #ccc; padding: 20px; text-align: center;">
@@ -253,27 +267,80 @@ if (!$reserva) {
             </section>
 
             <button type="submit"
-                style="width: 100%; margin: 40px 0; padding: 20px; background: #001f3f; color: white; font-weight: bold; font-size: 1.2rem;">
+                style="width: 100%; margin: 40px 0; padding: 20px; background: var(--primary); color: white; font-weight: bold; font-size: 1.2rem; cursor:pointer; border:none; border-radius:4px;">
                 <?php echo $t['btn_enviar']; ?>
             </button>
         </form>
     </main>
 
     <script>
-        // Lógica de bocaditos (se mantiene igual)
-        const checkboxes = document.querySelectorAll('input[name="bocaditos[]"]');
-        const limit = 6;
-        if (checkboxes.length > 0) {
-            checkboxes.forEach(cb => {
-                cb.addEventListener('change', () => {
-                    const checkedCount = document.querySelectorAll('input[name="bocaditos[]"]:checked').length;
-                    checkboxes.forEach(item => {
-                        if (checkedCount >= limit && !item.checked) item.disabled = true;
-                        else item.disabled = false;
-                    });
+        document.addEventListener('DOMContentLoaded', function () {
+            const startSelect = document.getElementById('hora_inicio');
+            const endSelect = document.getElementById('hora_fin');
+            const isEs = "<?php echo $lang; ?>" === 'es';
+
+            // Mantiene el desplegable con tamaño fijo de 8 para que no ocupe toda la pantalla
+            const makeCompact = (el) => {
+                el.addEventListener('mousedown', function () {
+                    if (this.options.length > 8) this.size = 8;
                 });
+                const reset = function () { this.size = 0; };
+                el.addEventListener('change', reset);
+                el.addEventListener('blur', reset);
+            };
+
+            makeCompact(startSelect);
+            makeCompact(endSelect);
+
+            function format12h(minutes) {
+                let h = Math.floor(minutes / 60) % 24;
+                let m = minutes % 60;
+                let ampm = h >= 12 ? 'PM' : 'AM';
+                let displayH = h % 12 || 12;
+                let displayM = m === 0 ? '00' : m;
+                return `${displayH}:${displayM} ${ampm}`;
+            }
+
+            function format24h(minutes) {
+                let h = Math.floor(minutes / 60) % 24;
+                let m = minutes % 60;
+                return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:00`;
+            }
+
+            for (let i = 0; i < 1440; i += 30) {
+                let opt = document.createElement('option');
+                opt.value = format24h(i);
+                opt.textContent = format12h(i);
+                startSelect.appendChild(opt);
+            }
+
+            startSelect.addEventListener('change', function () {
+                const [h, m] = this.value.split(':').map(Number);
+                const startMins = (h * 60) + m;
+                endSelect.innerHTML = '';
+                endSelect.disabled = false;
+
+                for (let i = 30; i <= 1440; i += 30) {
+                    let currentMins = startMins + i;
+                    if (currentMins > 1440) break;
+
+                    let opt = document.createElement('option');
+                    opt.value = format24h(currentMins);
+
+                    let totalHoras = i / 60;
+                    let duracionTexto = "";
+
+                    // Solo muestra texto de horas (1 hora, 2 horas...) si es exacto
+                    if (Number.isInteger(totalHoras)) {
+                        let unit = isEs ? (totalHoras === 1 ? 'hora' : 'horas') : (totalHoras === 1 ? 'hour' : 'hours');
+                        duracionTexto = ` (${totalHoras} ${unit})`;
+                    }
+
+                    opt.textContent = `${format12h(currentMins)}${duracionTexto}`;
+                    endSelect.appendChild(opt);
+                }
             });
-        }
+        });
     </script>
 </body>
 

@@ -1,5 +1,5 @@
 <?php
-// 1. Cargar dependencias (Asegúrate de que la ruta a tu autoload es correcta)
+// 1. Cargar dependencias
 require_once '../vendor/autoload.php';
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -13,8 +13,8 @@ if (!isset($_SESSION['admin']) || !isset($_GET['id'])) {
 
 $id = $conn->real_escape_string($_GET['id']);
 
-// 2. Obtener datos de la base de datos (Tu consulta SQL)
-$sql = "SELECT r.*, e.nombre as evento_tipo, m.nombre as mesa_nombre,
+// 2. Obtener datos de la base de datos (Consulta actualizada con JOIN a salones)
+$sql = "SELECT r.*, e.nombre as evento_tipo, m.nombre as mesa_nombre, s.nombre_salon,
                c.razon_social, c.identificacion, c.cliente_nombre, c.cliente_email,
                (SELECT GROUP_CONCAT(nombre_plato SEPARATOR ' • ') 
                 FROM reserva_detalles_menu WHERE id_reserva = r.id) as platos_lista
@@ -22,6 +22,7 @@ $sql = "SELECT r.*, e.nombre as evento_tipo, m.nombre as mesa_nombre,
         JOIN tipos_evento e ON r.id_tipo_evento = e.id
         JOIN clientes c ON r.id_cliente = c.id
         LEFT JOIN mesas m ON r.id_mesa = m.id
+        LEFT JOIN salones s ON r.id_salon = s.id
         WHERE r.id = '$id'";
 
 $res = $conn->query($sql);
@@ -33,19 +34,19 @@ if (!$d)
 // 3. Configurar Dompdf
 $options = new Options();
 $options->set('isHtml5ParserEnabled', true);
-$options->set('isRemoteEnabled', true); // Importante para cargar imágenes/logos
+$options->set('isRemoteEnabled', true);
 
 $dompdf = new Dompdf($options);
 
-// Ruta física de tu logo (ajusta la carpeta según tu estructura)
+// Manejo del Logo
 $rutaImagen = '../img/logo_goquito.png';
+$base64 = '';
+if (file_exists($rutaImagen)) {
+    $tipoArchivo = pathinfo($rutaImagen, PATHINFO_EXTENSION);
+    $datosImagen = file_get_contents($rutaImagen);
+    $base64 = 'data:image/' . $tipoArchivo . ';base64,' . base64_encode($datosImagen);
+}
 
-// Convertir a Base64 para máxima compatibilidad
-$tipoArchivo = pathinfo($rutaImagen, PATHINFO_EXTENSION);
-$datosImagen = file_get_contents($rutaImagen);
-$base64 = 'data:image/' . $tipoArchivo . ';base64,' . base64_encode($datosImagen);
-
-// 4. Preparar el diseño HTML en una variable
 ob_start();
 ?>
 <!DOCTYPE html>
@@ -55,55 +56,45 @@ ob_start();
     <style>
         body {
             font-family: 'Helvetica', sans-serif;
-            font-size: 12px;
+            font-size: 11px;
             color: #333;
+            line-height: 1.4;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             border-bottom: 2px solid #001f3f;
             padding-bottom: 10px;
-        }
-
-        .hotel-name {
-            font-size: 22px;
-            font-weight: bold;
-            color: #001f3f;
-            margin: 0;
-        }
-
-        .doc-title {
-            font-size: 16px;
-            color: #555;
-            margin: 5px 0;
         }
 
         .section {
             background: #001f3f;
             color: white;
-            padding: 5px 10px;
+            padding: 4px 10px;
             font-weight: bold;
-            margin-top: 20px;
+            margin-top: 15px;
+            text-transform: uppercase;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
+            margin-top: 5px;
         }
 
         th,
         td {
-            padding: 8px;
+            padding: 6px;
             border: 1px solid #eee;
             text-align: left;
         }
 
         .label {
             font-weight: bold;
-            width: 30%;
+            width: 25%;
             background-color: #f9f9f9;
+            color: #001f3f;
         }
 
         .footer {
@@ -111,7 +102,7 @@ ob_start();
             bottom: 0;
             width: 100%;
             text-align: center;
-            font-size: 10px;
+            font-size: 9px;
             color: #777;
             border-top: 1px solid #ccc;
             padding-top: 5px;
@@ -121,42 +112,47 @@ ob_start();
 
 <body>
     <div class="header">
-        <img src="<?php echo $base64; ?>" style="width: 150px; height: auto; margin-bottom: 10px;">
+        <?php if ($base64): ?>
+            <img src="<?php echo $base64; ?>" style="width: 140px;">
+        <?php endif; ?>
+        <div style="font-size: 14px; font-weight: bold; margin-top: 5px;">ORDEN DE SERVICIO #<?= $d['id'] ?></div>
     </div>
 
     <div class="section">INFORMACIÓN DEL CLIENTE</div>
     <table>
         <tr>
             <td class="label">Razón Social:</td>
-            <td><?= $d['razon_social'] ?: 'N/A' ?></td>
-        </tr>
-        <tr>
+            <td><?= htmlspecialchars($d['razon_social'] ?: $d['cliente_nombre']) ?></td>
             <td class="label">RUC / Cédula:</td>
-            <td><?= $d['identificacion'] ?></td>
+            <td><?= htmlspecialchars($d['identificacion']) ?></td>
         </tr>
         <tr>
             <td class="label">Contratante:</td>
-            <td><?= $d['cliente_nombre'] ?></td>
-        </tr>
-        <tr>
+            <td><?= htmlspecialchars($d['cliente_nombre']) ?></td>
             <td class="label">Email:</td>
-            <td><?= $d['cliente_email'] ?></td>
+            <td><?= htmlspecialchars($d['cliente_email']) ?></td>
         </tr>
     </table>
 
-    <div class="section">DETALLES OPERATIVOS</div>
+    <div class="section">DETALLES DEL EVENTO Y UBICACIÓN</div>
     <table>
+        <tr>
+            <td class="label">Salón Asignado:</td>
+            <td colspan="3" style="font-size: 13px; font-weight: bold; color: #001f3f;">
+                <?= htmlspecialchars($d['nombre_salon'] ?: 'Sin asignar') ?>
+            </td>
+        </tr>
         <tr>
             <td class="label">Fecha del Evento:</td>
             <td><?= date("d/m/Y", strtotime($d['fecha_evento'])) ?></td>
-            <td class="label">Personas:</td>
+            <td class="label">Asistentes:</td>
             <td><?= $d['cantidad_personas'] ?> Pax</td>
         </tr>
         <tr>
             <td class="label">Horario:</td>
             <td><?= substr($d['hora_inicio'], 0, 5) ?> a <?= substr($d['hora_fin'], 0, 5) ?></td>
-            <td class="label">Tipo:</td>
-            <td><?= $d['evento_tipo'] ?></td>
+            <td class="label">Tipo de Evento:</td>
+            <td><?= htmlspecialchars($d['evento_tipo']) ?></td>
         </tr>
     </table>
 
@@ -164,32 +160,36 @@ ob_start();
     <table>
         <tr>
             <td class="label">Menú Seleccionado:</td>
-            <td><?= $d['platos_lista'] ?: 'No especificado' ?></td>
+            <td><?= htmlspecialchars($d['platos_lista'] ?: 'No especificado') ?></td>
         </tr>
         <tr>
-            <td class="label">Restricciones/Notas:</td>
-            <td><?= $d['observaciones'] ?: 'Ninguna' ?></td>
+            <td class="label">Observaciones:</td>
+            <td><?= nl2br(htmlspecialchars($d['observaciones'] ?: 'Ninguna')) ?></td>
         </tr>
     </table>
 
-    <div class="section">MONTAJE Y EQUIPOS</div>
+    <div class="section">MONTAJE Y LOGÍSTICA</div>
     <table>
         <tr>
-            <td class="label">Salón/Mesa:</td>
-            <td><?= $d['mesa_nombre'] ?: 'Por definir' ?></td>
-        </tr>
-        <tr>
+            <td class="label">Estilo de Mesa:</td>
+            <td><?= htmlspecialchars($d['mesa_nombre'] ?: 'Por definir') ?></td>
             <td class="label">Mantelería:</td>
-            <td>Mesa: <?= $d['manteleria'] ?> | Servilleta: <?= $d['color_servilleta'] ?></td>
+            <td><?= htmlspecialchars($d['manteleria']) ?></td>
         </tr>
         <tr>
-            <td class="label">IT / Audiovisuales:</td>
-            <td><?= $d['equipos_audiovisuales'] ?: 'Ninguno' ?></td>
+            <td class="label">Color Servilleta:</td>
+            <td><?= htmlspecialchars($d['color_servilleta']) ?></td>
+            <td class="label">Audiovisuales:</td>
+            <td><?= htmlspecialchars($d['equipos_audiovisuales'] ?: 'Estándar') ?></td>
+        </tr>
+        <tr>
+            <td class="label">Logística adicional:</td>
+            <td colspan="3"><?= nl2br(htmlspecialchars($d['logistica'] ?: 'N/A')) ?></td>
         </tr>
     </table>
 
     <div class="footer">
-        GO Quito Hotel - Av. Eloy Alfaro y Catalina Aldaz - Quito, Ecuador
+        GO Quito Hotel - Av. Eloy Alfaro y Catalina Aldaz - Quito, Ecuador | Generado el: <?= date("d/m/Y H:i") ?>
     </div>
 </body>
 
@@ -197,18 +197,13 @@ ob_start();
 <?php
 $html = ob_get_clean();
 
-// 5. Renderizar
 $dompdf->loadHtml($html);
 $dompdf->setPaper('A4', 'portrait');
 $dompdf->render();
 
-// --- CORRECCIÓN CRÍTICA AQUÍ ---
-// Limpiamos cualquier salida previa (espacios, warnings de PHP) 
-// para que no ensucien el binario del PDF
 if (ob_get_length())
     ob_end_clean();
 
-// Enviamos los headers correctos para la descarga
-$dompdf->stream("Expediente_Evento_" . $id . ".pdf", array("Attachment" => 1));
-exit(); // Importante para detener cualquier ejecución posterior
+$dompdf->stream("Orden_Servicio_" . $id . ".pdf", array("Attachment" => 0)); // 0 para abrir en navegador, 1 para descargar
+exit();
 ?>

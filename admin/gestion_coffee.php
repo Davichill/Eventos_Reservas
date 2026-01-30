@@ -42,6 +42,8 @@ if (isset($_POST['btnguardar'])) {
     $cat = $conn->real_escape_string($_POST['categoria']);
 
     $foto_sql = "";
+    $foto_nombre = null; // Inicializamos para evitar errores
+
     if (!empty($_FILES['foto']['name'])) {
         $foto_nombre = time() . "_" . $_FILES['foto']['name'];
         if (move_uploaded_file($_FILES['foto']['tmp_name'], "../img/menu_coffee/" . $foto_nombre)) {
@@ -57,11 +59,12 @@ if (isset($_POST['btnguardar'])) {
         }
     } else {
         // --- LOG DE CREACIÓN ---
-        $img_val = !empty($foto_nombre) ? "'$foto_nombre'" : "NULL";
+        // Ajuste: Si no hay foto, se envía NULL explícito a la BD
+        $img_val = ($foto_nombre !== null) ? "'$foto_nombre'" : "NULL";
         $sql = "INSERT INTO menu_coffee_break (nombre, categoria, imagen_url) VALUES ('$nombre', '$cat', $img_val)";
         if ($conn->query($sql)) {
             $nuevo_id = $conn->insert_id;
-            registrarLog($conn, $id_admin, 'CREAR', 'menu_coffee_break', $nuevo_id, "Creó nuevo bocadito de Coffee Break: $nombre");
+            registrarLog($conn, $id_admin, 'CREAR', 'menu_coffee_break', $nuevo_id, "Creó nuevo bocadito: $nombre");
         }
     }
     header("Location: gestion_coffee.php?msj=ok");
@@ -158,6 +161,12 @@ if (isset($_GET['del'])) {
     <div class="admin-container">
         <?php include '../includes/sidebar.php'; ?>
         <main class="main-content">
+            <header class="top-bar">
+                <div class="user-info">
+                    <span>Bienvenido, <span class="user-name"><?= $_SESSION['admin_nombre'] ?? 'Admin' ?></span></span>
+                    <a href="../auth/logout.php" class="btn-logout">Cerrar Sesión</a>
+                </div>
+            </header>
             <?php include 'navbar.php'; ?>
 
             <?php if (isset($_GET['msj'])): ?>
@@ -175,7 +184,6 @@ if (isset($_GET['del'])) {
                     </div>
                 </div>
 
-                <!-- Formulario principal -->
                 <div class="form-box">
                     <h3>Registrar Nuevo Bocadito</h3>
                     <form method="POST" enctype="multipart/form-data" class="form-grid">
@@ -195,8 +203,8 @@ if (isset($_GET['del'])) {
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Imagen:</label>
-                            <input type="file" name="foto" accept="image/*" required
+                            <label>Imagen (Opcional):</label>
+                            <input type="file" name="foto" accept="image/*"
                                 title="Suba una imagen del bocadito (JPG, PNG, GIF)">
                         </div>
                         <input type="hidden" name="id" value="0">
@@ -204,7 +212,6 @@ if (isset($_GET['del'])) {
                     </form>
                 </div>
 
-                <!-- Listado de bocaditos -->
                 <div class="grid-bocaditos">
                     <div class="filter-container">
                         <div class="search-box">
@@ -288,7 +295,6 @@ if (isset($_GET['del'])) {
                 </div>
             </div>
 
-            <!-- MODAL DE EDICIÓN FLOTANTE -->
             <div id="modalEdit">
                 <div class="modal-content">
                     <h3>Editar Bocadito</h3>

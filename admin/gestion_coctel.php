@@ -39,6 +39,9 @@ if (isset($_POST['guardar'])) {
     $subcategoria = $conn->real_escape_string($_POST['subcategoria']);
 
     $imagen_sql = "";
+    $nombre_img = null; // Inicializamos
+
+    // Solo procesamos si realmente se subió un archivo sin errores
     if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] === 0) {
         $nombre_img = time() . "_" . preg_replace("/[^a-zA-Z0-9.]/", "_", $_FILES['imagen']['name']);
         if (move_uploaded_file($_FILES['imagen']['tmp_name'], $carpeta_destino . $nombre_img)) {
@@ -47,22 +50,21 @@ if (isset($_POST['guardar'])) {
     }
 
     if ($id > 0) {
-        // --- LOG DE EDICIÓN ---
+        // Al editar, si no hay imagen_sql, se mantiene la anterior
         $sql = "UPDATE menu_coctel SET nombre='$nombre', categoria='$categoria', subcategoria='$subcategoria' $imagen_sql WHERE id=$id";
         if ($conn->query($sql)) {
-            registrarLog($conn, $id_admin, 'EDITAR', 'menu_coctel', $id, "Editó el bocadito: $nombre (Categoría: $categoria)");
+            registrarLog($conn, $id_admin, 'EDITAR', 'menu_coctel', $id, "Editó el bocadito: $nombre");
         }
     } else {
-        // --- LOG DE CREACIÓN ---
-        $img_val = $imagen_sql ? "'$nombre_img'" : "NULL";
+        // Al crear, si no hay imagen, guardamos NULL en la base de datos
+        $img_val = ($nombre_img) ? "'$nombre_img'" : "NULL";
         $sql = "INSERT INTO menu_coctel (nombre, categoria, subcategoria, imagen_url, estado) 
                 VALUES ('$nombre', '$categoria', '$subcategoria', $img_val, 1)";
         if ($conn->query($sql)) {
             $nuevo_id = $conn->insert_id;
-            registrarLog($conn, $id_admin, 'CREAR', 'menu_coctel', $nuevo_id, "Creó nuevo bocadito: $nombre en $categoria");
+            registrarLog($conn, $id_admin, 'CREAR', 'menu_coctel', $nuevo_id, "Creó nuevo bocadito: $nombre");
         }
     }
-
     header("Location: gestion_coctel.php?res=ok");
     exit();
 }
@@ -174,6 +176,12 @@ if (isset($_GET['del'])) {
     <div class="admin-container">
         <?php include '../includes/sidebar.php'; ?>
         <main class="main-content">
+            <header class="top-bar">
+                <div class="user-info">
+                    <span>Bienvenido, <span class="user-name"><?= $_SESSION['admin_nombre'] ?? 'Admin' ?></span></span>
+                    <a href="../auth/logout.php" class="btn-logout">Cerrar Sesión</a>
+                </div>
+            </header>
             <?php include 'navbar.php'; ?>
 
             <?php if (isset($_GET['res'])): ?>
@@ -221,9 +229,9 @@ if (isset($_GET['del'])) {
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Imagen:</label>
-                            <input type="file" name="imagen" accept="image/*" required
-                                title="Suba una imagen del bocadito (JPG, PNG, GIF)">
+                            <label>Imagen (Opcional):</label>
+                            <input type="file" name="imagen" accept="image/*"
+                                title="Suba una imagen o deje en blanco para usar la predeterminada">
                         </div>
                         <button type="submit" name="guardar" class="btn-main">Guardar</button>
                     </form>

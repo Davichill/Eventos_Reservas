@@ -1,5 +1,4 @@
 <?php
-
 include_once __DIR__ . '/../php/conexion.php';
 session_start();
 
@@ -47,14 +46,13 @@ if (isset($_POST['guardar'])) {
     }
 
     if ($id > 0) {
-        // --- LOG DE EDICIÓN ---
         $sql = "UPDATE menu_almuerzo_cena SET nombre='$nombre', tiempo='$tiempo', subcategoria='$subcategoria' $imagen_sql WHERE id=$id";
         if ($conn->query($sql)) {
             registrarLog($conn, $id_admin, 'EDITAR', 'menu_almuerzo_cena', $id, "Editó el plato: $nombre (Tiempo: $tiempo)");
         }
     } else {
-        // --- LOG DE CREACIÓN ---
-        $img_val = $imagen_sql ? str_replace(", imagen_url = ", "", $imagen_sql) : "NULL";
+        // Ajuste para permitir imagen NULL si no se sube nada
+        $img_val = $imagen_sql ? "'" . str_replace(", imagen_url = '", "", rtrim($imagen_sql, "'")) . "'" : "NULL";
         $sql = "INSERT INTO menu_almuerzo_cena (nombre, tiempo, subcategoria, imagen_url, estado) 
                 VALUES ('$nombre', '$tiempo', '$subcategoria', $img_val, 1)";
         if ($conn->query($sql)) {
@@ -68,8 +66,6 @@ if (isset($_POST['guardar'])) {
 
 if (isset($_GET['del'])) {
     $id = intval($_GET['del']);
-
-    // Obtener datos antes de borrar para el log y para borrar la imagen
     $res = $conn->query("SELECT nombre, imagen_url FROM menu_almuerzo_cena WHERE id=$id");
     $data = $res->fetch_assoc();
     $nombre_plato = $data['nombre'];
@@ -78,7 +74,6 @@ if (isset($_GET['del'])) {
         unlink($carpeta_destino . $data['imagen_url']);
     }
 
-    // --- LOG DE ELIMINACIÓN ---
     if ($conn->query("DELETE FROM menu_almuerzo_cena WHERE id=$id")) {
         registrarLog($conn, $id_admin, 'ELIMINAR', 'menu_almuerzo_cena', $id, "Eliminó el plato: $nombre_plato");
     }
@@ -158,6 +153,12 @@ if (isset($_GET['del'])) {
     <div class="admin-container">
         <?php include '../includes/sidebar.php'; ?>
         <main class="main-content">
+            <header class="top-bar">
+                <div class="user-info">
+                    <span>Bienvenido, <span class="user-name"><?= $_SESSION['admin_nombre'] ?? 'Admin' ?></span></span>
+                    <a href="../auth/logout.php" class="btn-logout">Cerrar Sesión</a>
+                </div>
+            </header>
             <?php include 'navbar.php'; ?>
 
             <?php if (isset($_GET['res'])): ?>
@@ -174,7 +175,6 @@ if (isset($_GET['del'])) {
                     </div>
                 </div>
 
-                <!-- Formulario principal -->
                 <div class="form-box">
                     <h3>Registrar Nuevo Plato</h3>
                     <form method="POST" enctype="multipart/form-data" class="form-grid">
@@ -201,8 +201,8 @@ if (isset($_GET['del'])) {
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Imagen:</label>
-                            <input type="file" name="imagen" accept="image/*" required
+                            <label>Imagen (Opcional):</label>
+                            <input type="file" name="imagen" accept="image/*"
                                 title="Suba una imagen del plato (JPG, PNG, GIF)">
                         </div>
                         <input type="hidden" name="id" value="0">
@@ -238,7 +238,6 @@ if (isset($_GET['del'])) {
                         Mostrando <span id="count-visible">0</span> platos
                     </div>
                 </div>
-                <!-- Listado de platos -->
                 <div class="grid-platos">
                     <?php
                     $platos = $conn->query("SELECT * FROM menu_almuerzo_cena ORDER BY tiempo, subcategoria");
@@ -251,7 +250,7 @@ if (isset($_GET['del'])) {
                     <?php else:
                         while ($p = $platos->fetch_assoc()):
                             $img_src = $carpeta_destino . $p['imagen_url'];
-                            $img_exists = file_exists($img_src);
+                            $img_exists = !empty($p['imagen_url']) && file_exists($img_src);
                             $tiempo_class = '';
                             if ($p['tiempo'] == 'Entradas') {
                                 $tiempo_class = 'tiempo-entradas';
@@ -300,7 +299,6 @@ if (isset($_GET['del'])) {
                 </div>
             </div>
 
-            <!-- MODAL DE EDICIÓN FLOTANTE -->
             <div id="modalEdit">
                 <div class="modal-content">
                     <h3>Editar Plato</h3>
@@ -358,20 +356,16 @@ if (isset($_GET['del'])) {
 
             if (subcats[tiempo]) {
                 const options = subcats[tiempo];
-
-                // Agregar opción inicial
                 const defaultOption = new Option('Seleccione subcategoría...', '', true, true);
                 defaultOption.disabled = true;
                 defaultOption.selected = true;
                 select.add(defaultOption);
 
-                // Agregar opciones
                 options.forEach(item => {
                     const option = new Option(item, item);
                     select.add(option);
                 });
 
-                // Seleccionar valor si existe
                 if (selectedValue && options.includes(selectedValue)) {
                     select.value = selectedValue;
                 }
@@ -381,23 +375,14 @@ if (isset($_GET['del'])) {
         function abrirEditor(data) {
             document.getElementById('edit-id').value = data.id;
             document.getElementById('edit-nombre').value = data.nombre;
-
             const tiempoSelect = document.getElementById('edit-tiempo');
             tiempoSelect.value = data.tiempo;
-
-            // Actualizar subcategorías con la selección actual
             cambiarSub(data.tiempo, 'edit-sub', data.subcategoria);
-
-            // Mostrar modal con animación
             const modal = document.getElementById('modalEdit');
             modal.style.display = 'block';
             document.body.style.overflow = 'hidden';
-
-            // Efecto visual
             modal.style.animation = 'none';
-            setTimeout(() => {
-                modal.style.animation = 'fadeIn 0.3s ease';
-            }, 10);
+            setTimeout(() => { modal.style.animation = 'fadeIn 0.3s ease'; }, 10);
         }
 
         function cerrarModal() {
@@ -406,118 +391,31 @@ if (isset($_GET['del'])) {
             document.body.style.overflow = 'auto';
         }
 
-        // Cerrar modal al hacer clic fuera
         document.getElementById('modalEdit').addEventListener('click', function (e) {
-            if (e.target.id === 'modalEdit') {
-                cerrarModal();
-            }
+            if (e.target.id === 'modalEdit') cerrarModal();
         });
 
-        // Cerrar modal con ESC
         document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') {
-                cerrarModal();
-            }
+            if (e.key === 'Escape') cerrarModal();
         });
 
-        // Inicializar
         document.addEventListener('DOMContentLoaded', function () {
-            // Auto-remover mensajes de estado
             setTimeout(() => {
                 const messages = document.querySelectorAll('.status-message');
                 messages.forEach(msg => msg.remove());
             }, 3500);
 
-            // Validación del formulario de creación
-            document.querySelector('.form-grid').addEventListener('submit', function (e) {
-                const nombre = document.getElementById('crear_nombre').value.trim();
-                const tiempo = document.getElementById('main-tiempo').value;
-                const subcategoria = document.getElementById('main-sub').value;
-
-                if (!nombre) {
-                    e.preventDefault();
-                    alert('Por favor ingrese el nombre del plato');
-                    document.getElementById('crear_nombre').focus();
-                    return false;
-                }
-
-                if (!tiempo) {
-                    e.preventDefault();
-                    alert('Por favor seleccione un tiempo');
-                    document.getElementById('main-tiempo').focus();
-                    return false;
-                }
-
-                if (!subcategoria) {
-                    e.preventDefault();
-                    alert('Por favor seleccione una subcategoría');
-                    document.getElementById('main-sub').focus();
-                    return false;
-                }
-            });
-
-            // Validación del formulario de edición
-            document.getElementById('formEditar').addEventListener('submit', function (e) {
-                const nombre = document.getElementById('edit-nombre').value.trim();
-                const tiempo = document.getElementById('edit-tiempo').value;
-                const subcategoria = document.getElementById('edit-sub').value;
-
-                if (!nombre) {
-                    e.preventDefault();
-                    alert('Por favor ingrese el nombre del plato');
-                    document.getElementById('edit-nombre').focus();
-                    return false;
-                }
-
-                if (!tiempo) {
-                    e.preventDefault();
-                    alert('Por favor seleccione un tiempo');
-                    document.getElementById('edit-tiempo').focus();
-                    return false;
-                }
-
-                if (!subcategoria) {
-                    e.preventDefault();
-                    alert('Por favor seleccione una subcategoría');
-                    document.getElementById('edit-sub').focus();
-                    return false;
-                }
-            });
-        });
-
-        // Efecto al cambiar selección en formulario de creación
-        document.getElementById('main-tiempo').addEventListener('change', function () {
-            if (this.value) {
-                const select = document.getElementById('main-sub');
-                select.style.borderColor = 'var(--accent-color)';
-                setTimeout(() => {
-                    select.style.borderColor = '';
-                }, 500);
-            }
-        });
-
-        document.addEventListener('DOMContentLoaded', function () {
             const searchInput = document.getElementById('filter-search');
             const tiempoSelect = document.getElementById('filter-tiempo');
             const subSelect = document.getElementById('filter-sub');
             const cards = document.querySelectorAll('.card');
             const countDisplay = document.getElementById('count-visible');
 
-            // Mismo objeto de subcategorías que ya tienes
-            const subcatsData = {
-                "Entradas": ["ENSALADAS", "CEVICHES Y CAUSAS", "ENTRADAS Y CREMAS"],
-                "Plato Fuerte": ["CARNES Y ESPECIALIDADES", "POLLO", "MARISCOS", "VEGETARIANOS"],
-                "Postres": ["TORTAS Y PASTELES", "CREMOSOS", "POSTRES HORNEADOS", "POSTRES LIGEROS Y FRUTALES"]
-            };
-
             function updateFilterSub() {
                 const tiempo = tiempoSelect.value;
                 subSelect.innerHTML = '<option value="all">Todas las subcategorías</option>';
-
-                if (subcatsData[tiempo]) {
-                    subcatsData[tiempo].forEach(s => {
-                        subSelect.add(new Option(s, s));
-                    });
+                if (subcats[tiempo]) {
+                    subcats[tiempo].forEach(s => { subSelect.add(new Option(s, s)); });
                 }
                 applyFilters();
             }
@@ -532,7 +430,6 @@ if (isset($_GET['del'])) {
                     const name = card.querySelector('.card-title').textContent.toLowerCase();
                     const tiempo = card.querySelector('.badge-tiempo').textContent;
                     const sub = card.querySelector('.badge-subcategoria').textContent;
-
                     const matchesSearch = name.includes(searchText);
                     const matchesTiempo = (selectedTiempo === 'all' || tiempo === selectedTiempo);
                     const matchesSub = (selectedSub === 'all' || sub === selectedSub);
@@ -546,30 +443,14 @@ if (isset($_GET['del'])) {
                         card.style.opacity = '0';
                     }
                 });
-
                 countDisplay.textContent = visibleCount;
-
-                // Manejar estado vacío
-                const grid = document.querySelector('.grid-platos');
-                let emptyMsg = document.getElementById('no-results-msg');
-                if (visibleCount === 0) {
-                    if (!emptyMsg) {
-                        grid.insertAdjacentHTML('afterend', '<div id="no-results-msg" style="text-align:center; padding:40px; color:#999;">No se encontraron platos con estos filtros.</div>');
-                    }
-                } else if (emptyMsg) {
-                    emptyMsg.remove();
-                }
             }
 
-            // Eventos
             searchInput.addEventListener('input', applyFilters);
             tiempoSelect.addEventListener('change', updateFilterSub);
             subSelect.addEventListener('change', applyFilters);
-
-            // Inicializar contador
             applyFilters();
         });
     </script>
 </body>
-
 </html>

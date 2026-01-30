@@ -1,207 +1,167 @@
 <?php
 include_once __DIR__ . '/../php/conexion.php';
+include_once __DIR__ . '/../php/platos_config.php';
 
-// 1. FUNCIÓN MEJORADA CON IMÁGENES - RUTAS CORREGIDAS PARA COINCIDIR CON CÓCTEL
-if (!function_exists('pintarSeccionSubdividida')) {
-    function pintarSeccionSubdividida($tiempo_db, $conn, $lang = 'es')
+// FUNCIÓN SIMPLIFICADA como Seminario
+if (!function_exists('pintarCheckCena')) {
+    function pintarCheckCena($nombre, $grupo, $imagen, $t, $tiempo_db = '', $info_extra = [])
     {
-        // Ruta base CORREGIDA para coincidir con cóctel
-        $rutaBase = "img/menu_almuerzo/"; // Sin ../
+        $ruta_img = !empty($imagen) ? "img/menu_almuerzo/$imagen" : "img/no-image.png";
+        $nombreTraducido = isset($t[$nombre]) ? $t[$nombre] : $nombre;
 
-        // Buscamos qué subcategorías existen para este Tiempo
-        $sqlSub = "SELECT DISTINCT subcategoria FROM menu_almuerzo_cena 
-                   WHERE tiempo = '$tiempo_db' AND estado = 1 ORDER BY subcategoria ASC";
-        $resSub = $conn->query($sqlSub);
-
-        if ($resSub && $resSub->num_rows > 0) {
-            while ($sub = $resSub->fetch_assoc()) {
-                $nombreSub = $sub['subcategoria'];
-                $nombreSubTraducido = isset($GLOBALS['t'][$nombreSub]) ? $GLOBALS['t'][$nombreSub] : $nombreSub;
-
-                // Imprimimos el título de la subdivisión
-                echo "<p class='sub-titulo-pdf'>$nombreSubTraducido</p>";
-                echo "<div class='grid-platos'>";
-
-                // Traemos los platos de esa subcategoría
-                $sqlPlatos = "SELECT * FROM menu_almuerzo_cena 
-                             WHERE tiempo = '$tiempo_db' AND subcategoria = '$nombreSub' AND estado = 1";
-                $resPlatos = $conn->query($sqlPlatos);
-
-                while ($item = $resPlatos->fetch_assoc()) {
-                    $nombre = $item['nombre'];
-                    $nombreTraducido = isset($GLOBALS['t'][$nombre]) ? $GLOBALS['t'][$nombre] : $nombre;
-                    // RUTA CORREGIDA: Sin ../
-                    $img = $item['imagen_url'] ? $rutaBase . $item['imagen_url'] : 'img/no-image.png';
-                    echo "<label class='item-cena' onmouseover=\"actualizarPrevisualizacion('$img', '$nombreTraducido')\">
-                            <input type='checkbox' name='bocaditos[]' value='$nombre' data-group='$tiempo_db'> 
-                            <span>$nombreTraducido</span>
-                          </label>";
-                }
-                echo "</div>"; // Cierra grid-platos
-            }
-        } else {
-            echo "<small style='color:#999;'>" . ($lang === 'en' ? 'No options configured.' : 'No hay opciones configuradas.') . "</small>";
+        // Data attributes adicionales para platos fuertes
+        $data_extra = '';
+        if ($tiempo_db == 'Plato Fuerte' && !empty($info_extra)) {
+            $data_extra = ' data-guarnicion="' . htmlspecialchars($info_extra['guarnicion'] ?? '', ENT_QUOTES) . '"';
+            $data_extra .= ' data-vegetales="' . htmlspecialchars($info_extra['vegetales'] ?? '', ENT_QUOTES) . '"';
         }
+
+        echo "<label class='item-cena' data-img='$ruta_img'$data_extra>
+                <input type='checkbox' name='bocaditos[]' value='$nombre' data-group='$grupo'> 
+                <span>$nombreTraducido</span>
+              </label>";
     }
 }
 
-// Obtener idioma
 $lang = isset($_GET['lang']) && $_GET['lang'] === 'en' ? 'en' : 'es';
 $t = $texts[$lang];
 ?>
 
-<!DOCTYPE html>
-<html lang="<?php echo $lang; ?>">
+<link rel="stylesheet" href="css/menu/almuerzo_cena.css">
 
-<head>
-    <link rel="stylesheet" href="css/menu/almuerzo_cena.css">
-    <style>
-        /* Contenedor principal para mantener todo en su sitio */
-        .menu-layout-container {
-            display: grid;
-            grid-template-columns: 1fr 350px;
-            /* Columna fija para la vista previa */
-            gap: 25px;
-            align-items: start;
-        }
+<div class="instruccion"
+    style="grid-column: 1 / -1; background: #fff8e1; border-left: 5px solid #ffc107; padding: 15px; margin-bottom: 20px;">
+    <strong><?php echo $t['menu_almuerzo_title']; ?></strong> <?php echo $t['menu_almuerzo_desc']; ?>
+</div>
 
-        /* Grilla de platos: Ahora permite más columnas */
-        .grid-platos {
-            display: grid;
-            /* Bajamos de 400px a 180px para que entren varios de izquierda a derecha */
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 12px;
-            width: 100%;
-        }
+<div style="grid-column: 1 / -1; display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+    <label class="plan-card">
+        <input type="radio" name="menu_opcion" value="Menú 2 Tiempos" onclick="activarMenu(2)" required>
+        <div class="plan-titulo"><?php echo $t['menu_2_tiempos']; ?></div>
+        <ul class="plan-detalles">
+            <li><?php echo $t['menu_2_sub']; ?></li>
+        </ul>
+    </label>
 
-        /* Evitar que los platos largos rompan el diseño */
-        .item-cena {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px;
-            background: #fff;
-            border: 1px solid #eee;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            cursor: pointer;
-            min-height: 45px;
-            /* Altura uniforme */
-        }
+    <label class="plan-card">
+        <input type="radio" name="menu_opcion" value="Menú 3 Tiempos" onclick="activarMenu(3)">
+        <div class="plan-titulo"><?php echo $t['menu_3_tiempos']; ?></div>
+        <ul class="plan-detalles">
+            <li><?php echo $t['menu_3_sub']; ?></li>
+        </ul>
+    </label>
 
-        /* LA CLAVE: Columna de vista previa pegajosa */
-        .columna-previa {
-            position: sticky;
-            top: 20px;
-            /* Se queda fija al hacer scroll */
-            max-width: 350px;
-        }
+    <label class="plan-card">
+        <input type="radio" name="menu_opcion" value="Menú 4 Tiempos" onclick="activarMenu(3)">
+        <div class="plan-titulo">Menú 4 Tiempos</div>
+        <ul class="plan-detalles">
+            <li>Entrada + Plato Fuerte + Postre + Sorbet incluido</li>
+        </ul>
+    </label>
+</div>
 
-        .preview-card {
-            width: 100%;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            border-radius: 12px;
-            background: white;
-        }
+<div id="contenedor-menu-cena"
+    style="grid-column: 1 / -1; opacity: 0.5; pointer-events: none; transition: 0.3s; display: grid; grid-template-columns: 1fr 320px; gap: 20px;">
 
-        /* Ajuste para móviles */
-        @media (max-width: 900px) {
-            .menu-layout-container {
-                grid-template-columns: 1fr;
-            }
+    <div class="opciones-cena">
+        <!-- SECCIONES COMO SEMINARIO - CAMBIADO: QUITADO "open" -->
+        <?php
+        $secciones_config = [
+            'Entradas' => ['titulo' => $t['entradas_title'], 'grupo' => 'Entradas'],
+            'Plato Fuerte' => ['titulo' => $t['platos_fuertes_title'], 'grupo' => 'Plato Fuerte'],
+            'Postres' => ['titulo' => $t['postres_title'], 'grupo' => 'Postres']
+        ];
 
-            .columna-previa {
-                position: static;
-                margin: 0 auto;
-            }
-        }
-    </style>
-</head>
+        foreach ($secciones_config as $seccion_db => $info):
+            ?>
+            <details class="seccion-seminario">
+                <!-- SIN "open" para que empiece cerrado -->
+                <summary><?php echo $info['titulo']; ?></summary>
+                <div class="contenido-seminario">
+                    <?php
+                    // Obtener subcategorías
+                    $sqlSub = "SELECT DISTINCT subcategoria FROM menu_almuerzo_cena 
+                          WHERE tiempo = '$seccion_db' AND estado = 1 ORDER BY subcategoria ASC";
+                    $resSub = $conn->query($sqlSub);
 
-<!-- LAYOUT CON DOS COLUMNAS -->
-<div class="menu-layout-container">
-    <!-- COLUMNA IZQUIERDA: MENÚ DE SELECCIÓN -->
-    <div class="columna-seleccion">
-        <div class="instruccion"
-            style="background: #fff8e1; border-left: 5px solid #ffc107; padding: 15px; margin-bottom: 20px; border-radius: 8px;">
-            <strong><?php echo $t['menu_almuerzo_title']; ?></strong> <?php echo $t['menu_almuerzo_desc']; ?>
-        </div>
+                    if ($resSub && $resSub->num_rows > 0):
+                        while ($sub = $resSub->fetch_assoc()):
+                            $nombreSub = $sub['subcategoria'];
+                            $nombreSubTraducido = isset($t[$nombreSub]) ? $t[$nombreSub] : $nombreSub;
+                            ?>
+                            <p class="sub-cat"><?php echo $nombreSubTraducido; ?></p>
+                            <div class="grid-items">
+                                <?php
+                                // Obtener platos de esta subcategoría
+                                $sqlPlatos = "SELECT * FROM menu_almuerzo_cena 
+                                 WHERE tiempo = '$seccion_db' AND subcategoria = '$nombreSub' AND estado = 1";
+                                $resPlatos = $conn->query($sqlPlatos);
 
-        <div class="planes-container" style="display: flex; gap: 15px; margin-bottom: 20px;">
-            <label class="plan-btn">
-                <input type="radio" name="menu_opcion" value="Menú 2 Tiempos" onclick="activarMenu(2)" required>
-                <span><?php echo $t['menu_2_tiempos']; ?><br><small>(<?php echo $t['menu_2_sub']; ?>)</small></span>
-            </label>
-            <label class="plan-btn">
-                <input type="radio" name="menu_opcion" value="Menú 3 Tiempos" onclick="activarMenu(3)">
-                <span><?php echo $t['menu_3_tiempos']; ?><br><small>(<?php echo $t['menu_3_sub']; ?>)</small></span>
-            </label>
-            <label class="plan-btn">
-                <input type="radio" name="menu_opcion" value="Menú 4 Tiempos" onclick="activarMenu(4)">
-                <span><?php echo $t['menu_4_tiempos']; ?><br><small>(<?php echo $t['menu_4_sub']; ?>)</small></span>
-            </label>
-        </div>
+                                while ($item = $resPlatos->fetch_assoc()):
+                                    $info_extra = [];
+                                    if ($seccion_db == 'Plato Fuerte') {
+                                        $info_extra = obtenerInfoPlato($item['nombre']);
+                                    }
 
-        <div id="contenedor-menu-cena" style="opacity: 0.5; pointer-events: none; transition: 0.3s;">
-
-            <details open class="seccion-maestra">
-                <summary>1. <?php echo $t['entradas_title']; ?></summary>
-                <div class="contenido-interno">
-                    <?php pintarSeccionSubdividida("Entradas", $conn, $lang); ?>
+                                    pintarCheckCena(
+                                        $item['nombre'],
+                                        $info['grupo'],
+                                        $item['imagen_url'],
+                                        $t,
+                                        $seccion_db,
+                                        $info_extra
+                                    );
+                                endwhile;
+                                ?>
+                            </div>
+                            <?php
+                        endwhile;
+                    else:
+                        echo "<small style='color:#999;'>" . ($lang === 'en' ? 'No options configured.' : 'No hay opciones configuradas.') . "</small>";
+                    endif;
+                    ?>
                 </div>
             </details>
-
-            <details open class="seccion-maestra">
-                <summary>2. <?php echo $t['platos_fuertes_title']; ?></summary>
-                <div class="contenido-interno">
-                    <?php pintarSeccionSubdividida("Plato Fuerte", $conn, $lang); ?>
-                </div>
-            </details>
-
-            <details open class="seccion-maestra">
-                <summary>3. <?php echo $t['postres_title']; ?></summary>
-                <div class="contenido-interno">
-                    <?php pintarSeccionSubdividida("Postres", $conn, $lang); ?>
-                </div>
-            </details>
-
-            <!-- SECCIÓN DE SORBET (solo para 4 tiempos) -->
-            <details open class="seccion-maestra" id="seccion-sorbet" style="display: none;">
-                <summary>4. <?php echo $t['sorbet_title']; ?></summary>
-                <div class="contenido-interno">
-                    <div class="grid-platos">
-                        <!-- Imagen por defecto para sorbet -->
-                        <label class="item-cena"
-                            onmouseover="actualizarPrevisualizacion('../img/no-image.png', '<?php echo $t['sorbet_limon']; ?>')">
-                            <input type="checkbox" name="bocaditos[]" value="Sorbet de Limón" data-group="Sorbet">
-                            <span><?php echo $t['sorbet_limon']; ?></span>
-                        </label>
-                    </div>
-                </div>
-            </details>
-        </div>
+        <?php endforeach; ?>
     </div>
 
-    <!-- COLUMNA DERECHA: VISTA PREVIA -->
-    <div class="columna-previa">
-        <div class="preview-card">
-            <div class="preview-header">
-                <h3><?php echo $t['vista_previa']; ?></h3>
-                <p class="preview-label"><?php echo $t['instruccion_preview']; ?></p>
+    <!-- VISTA PREVIA COMO SEMINARIO -->
+    <div class="visor-cena" style="padding-top: 30px;">
+        <div
+            style="position: sticky; top: 20px; background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 8px; text-align: center;">
+            <p style="font-size: 11px; font-weight: bold; color: #888; margin-bottom: 10px; text-transform: uppercase;">
+                <?php echo $t['vista_previa']; ?>
+            </p>
+
+            <div
+                style="width: 100%; height: 200px; overflow: hidden; border-radius: 4px; background: #f9f9f9; border: 1px solid #eee;">
+                <img id="preview-image" src="img/no-image.png"
+                    style="width: 100%; height: 100%; object-fit: cover; transition: 0.3s;">
             </div>
 
-            <div class="preview-image-container">
-                <img id="preview-image" src="../img/no-image.png" alt="<?php echo $t['alt_preview']; ?>">
+            <p id="preview-title"
+                style="margin-top: 15px; font-weight: bold; font-size: 14px; color: #333; min-height: 40px;">
+                <?php echo $t['select_plate']; ?>
+            </p>
+
+            <!-- DETALLES EXTRA PARA PLATOS FUERTES -->
+            <div id="preview-details" style="display: none; margin-top: 10px; text-align: left; font-size: 0.85rem;">
+                <div style="margin-bottom: 5px;">
+                    <strong><?php echo $t['guarnicion'] ?? 'Guarnición'; ?>:</strong>
+                    <span id="detail-guarnicion" style="color: #555;">-</span>
+                </div>
+                <div>
+                    <strong><?php echo $t['vegetales'] ?? 'Vegetales'; ?>:</strong>
+                    <span id="detail-vegetales" style="color: #555;">-</span>
+                </div>
             </div>
 
-            <div class="preview-info">
-                <h4 id="preview-title"><?php echo $t['select_plate']; ?></h4>
-            </div>
-
-            <div class="selection-summary">
-                <div class="selection-counter">
+            <div class="selection-summary"
+                style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 6px;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
                     <strong><?php echo $t['total_selected']; ?>:</strong>
-                    <span id="selected-count">0</span> / <span id="max-selections">0</span>
+                    <span id="selected-count" style="font-weight: 600; color: #d35400;">0</span> /
+                    <span id="max-selections" style="font-weight: 600;">0</span>
                 </div>
             </div>
         </div>

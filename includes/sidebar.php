@@ -6,8 +6,9 @@
 
     <ul class="sidebar-menu">
         <li>
-            <a href="dashboard.php" class="<?= basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'active' : '' ?>">
+            <a href="pagina_principal.php" class="<?= basename($_SERVER['PHP_SELF']) == 'pagina_principal.php' ? 'active' : '' ?>">
                 <i class="fas fa-chart-line"></i> Dashboard
+
             </a>
         </li>
         <li>
@@ -16,24 +17,15 @@
             </a>
         </li>
         <li>
-            <a href="eventos.php" class="<?= basename($_SERVER['PHP_SELF']) == 'eventos.php' ? 'active' : '' ?>">
+            <a href="dashboard.php" class="<?= basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'active' : '' ?>">
                 <i class="fas fa-calendar-alt"></i> Eventos & Reservas
             </a>
         </li>
         <li>
-            <a href="eventos.php" class="<?= basename($_SERVER['PHP_SELF']) == 'eventos.php' ? 'active' : '' ?>">
-                <i class="fas fa-calendar-alt"></i> Eventos & Reservas
+            <a href="calendario_eventos.php" class="<?= basename($_SERVER['PHP_SELF']) == 'calendario_eventos.php' ? 'active' : '' ?>">
+                <i class="fas fa-calendar-alt"></i> Calendario
             </a>
         </li>
-        <li>
-            <a href="eventos.php" class="<?= basename($_SERVER['PHP_SELF']) == 'eventos.php' ? 'active' : '' ?>">
-                <i class="fas fa-calendar-alt"></i> Eventos & Reservas
-            </a>
-        </li>
-        <li>
-            <a href="eventos.php" class="<?= basename($_SERVER['PHP_SELF']) == 'eventos.php' ? 'active' : '' ?>">
-                <i class="fas fa-calendar-alt"></i> Eventos & Reservas
-            </a>
-        </li>
+       
     </ul>
 </nav>
