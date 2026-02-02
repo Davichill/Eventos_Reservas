@@ -198,9 +198,6 @@ include_once __DIR__ . '/../php/conexion.php';
         </div>
     </div>
     <script>
-        // ============================================
-        // FUNCIONES PARA EL ACORDEÓN
-        // ============================================
         
         // Variable global para el estado del acordeón
         const ACORDEON_STORAGE_KEY = 'acordeon_coctel_estado';

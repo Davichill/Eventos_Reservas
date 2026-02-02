@@ -656,7 +656,7 @@ $res = $conn->query($sql);
     // Función para copiar al portapapeles
     function copyToClipboard(event, token) {
         event.stopPropagation();
-        const url = window.location.origin + '/cliente/confirmar.php?token=' + token;
+        const url = window.location.origin + '/eventos-reservas/confirmar.php?token=' + token;
         navigator.clipboard.writeText(url).then(() => {
             const originalText = event.target.innerHTML;
             event.target.innerHTML = '✓';

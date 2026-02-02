@@ -222,7 +222,7 @@ $eventos = $conn->query($query_eventos);
                         <div style="text-align: center; padding: 60px 20px; color: #ccc;">
                             <i class="fas fa-calendar-times fa-4x" style="margin-bottom: 15px; opacity: 0.3;"></i>
                             <p>Este cliente no tiene eventos ni reservas registradas.</p>
-                            <a href="eventos.php?id_cliente=<?= $id ?>"
+                            <a href="nueva_invitacion.php?id_cliente=<?= $id ?>"
                                 style="color: var(--azul-quito); font-weight: bold; text-decoration: none; display: inline-block; margin-top: 10px;">
                                 <i class="fas fa-plus"></i> Crear nueva reserva ahora
                             </a>

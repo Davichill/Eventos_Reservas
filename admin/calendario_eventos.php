@@ -3,15 +3,16 @@ session_start();
 include '../php/conexion.php';
 
 // Modificamos la consulta SQL para incluir el nombre personalizado
+// Modifica la consulta SQL para incluir observaciones
 $sql = "SELECT r.id, r.hora_inicio, r.hora_fin, r.fecha_evento, r.nombre_evento,
-               e.nombre as tipo_nombre, c.cliente_nombre, s.nombre_salon,
+               r.observaciones,  
+               e.nombre as tipo_nombre, c.cliente_nombre,c.cliente_telefono, s.nombre_salon,
                r.cantidad_personas, r.contacto_evento_nombre, r.contacto_evento_telefono,
                r.estado  
         FROM reservas r
         INNER JOIN tipos_evento e ON r.id_tipo_evento = e.id
         INNER JOIN clientes c ON r.id_cliente = c.id
         LEFT JOIN salones s ON r.id_salon = s.id";
-
 $res = $conn->query($sql);
 $eventos_js = [];
 
@@ -53,8 +54,9 @@ while ($row = $res->fetch_assoc()) {
         'tipo' => $row['tipo_nombre'],
         'pax' => $row['cantidad_personas'],
         'contacto' => $row['contacto_evento_nombre'],
-        'telefono' => $row['contacto_evento_telefono'],
+        'telefono' => $row['cliente_telefono'],
         'estado' => $row['estado'] ?? 'Pendiente',
+        'observaciones' => $row['observaciones'] ?? '', // AGREGADO: Campo observaciones
         'color' => $color,
         'textColor' => 'white'
     ];
@@ -66,8 +68,8 @@ while ($row = $res->fetch_assoc()) {
 <head>
     <meta charset='utf-8' />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/gestion_menu/estilos_admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.css' rel='stylesheet' />
     <link href='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.print.css' rel='stylesheet'
         media='print' />
@@ -82,6 +84,119 @@ while ($row = $res->fetch_assoc()) {
     <script src='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/locale/es.js'></script>
 
     <script>
+        // Función para formatear fecha y hora
+        function formatearFecha(fechaISO) {
+            return moment(fechaISO).format('dddd, D [de] MMMM [de] YYYY');
+        }
+
+        function formatearHora(horaISO) {
+            return moment(horaISO).format('h:mm A');
+        }
+
+        // Función para determinar el color del badge según el estado
+        function getColorEstado(estado) {
+            switch (estado.toUpperCase()) {
+                case 'CONFIRMADA':
+                    return { bg: '#27ae60', text: 'white' };
+                case 'PENDIENTE':
+                    return { bg: '#f39c12', text: 'white' };
+                case 'CANCELADA':
+                    return { bg: '#e74c3c', text: 'white' };
+                case 'COMPLETADA':
+                    return { bg: '#3498db', text: 'white' };
+                default:
+                    return { bg: '#001f3f', text: 'white' };
+            }
+        }
+
+        // Función para mostrar el modal con los datos del evento
+        function mostrarModalEvento(evento) {
+            const modal = document.getElementById('eventoModal');
+            const fechaInicio = formatearFecha(evento.start);
+            const horaInicio = formatearHora(evento.start);
+            const horaFin = formatearHora(evento.end);
+
+            // Llenar los campos del modal
+            document.getElementById('modalTitle').textContent = evento.title_full;
+            document.getElementById('modalFecha').textContent = fechaInicio;
+            document.getElementById('modalHorario').textContent = `${horaInicio} - ${horaFin}`;
+            document.getElementById('modalCliente').textContent = evento.cliente || 'No especificado';
+            document.getElementById('modalAsistentes').textContent = evento.pax ? `${evento.pax} personas` : 'No especificado';
+            document.getElementById('modalSalon').textContent = evento.salon || 'No asignado';
+            document.getElementById('modalTipo').textContent = evento.tipo || 'No especificado';
+            document.getElementById('modalContacto').textContent = evento.contacto || 'No especificado';
+            document.getElementById('modalTelefono').textContent = evento.telefono || 'No especificado';
+            
+            // Mostrar observaciones si existen
+            const notasElement = document.getElementById('modalNotas');
+            if (evento.observaciones && evento.observaciones.trim() !== '') {
+                notasElement.innerHTML = evento.observaciones.replace(/\n/g, '<br>');
+                notasElement.style.color = '#333';
+            } else {
+                notasElement.innerHTML = '<em>No hay notas adicionales para este evento.</em>';
+                notasElement.style.color = '#95a5a6';
+            }
+
+            // Configurar el estado con el color correspondiente
+            const estadoElement = document.getElementById('modalEstado');
+            estadoElement.textContent = evento.estado || 'Pendiente';
+            const colorEstado = getColorEstado(evento.estado);
+            estadoElement.style.backgroundColor = colorEstado.bg;
+            estadoElement.style.color = colorEstado.text;
+
+            // Configurar botones de acción
+            const btnEditar = document.getElementById('btnEditarEvento');
+            const btnEliminar = document.getElementById('btnEliminarEvento');
+
+            btnEditar.onclick = function () {
+                window.location.href = `editar_evento.php?id=${evento.id}`;
+            };
+
+            btnEliminar.onclick = function () {
+                if (confirm(`¿Está seguro de eliminar el evento "${evento.title_full}"?`)) {
+                    window.location.href = `eliminar_evento.php?id=${evento.id}`;
+                }
+            };
+
+            // Mostrar el modal
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Cerrar el modal
+        function cerrarModal() {
+            const modal = document.getElementById('eventoModal');
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // Event listeners para cerrar el modal
+        document.addEventListener('DOMContentLoaded', function () {
+            const modal = document.getElementById('eventoModal');
+            const closeBtn = document.querySelector('.close-modal');
+            const btnCerrar = document.getElementById('btnCerrarModal');
+
+            // Cerrar al hacer clic en la X
+            closeBtn.onclick = cerrarModal;
+
+            // Cerrar al hacer clic en el botón cerrar
+            btnCerrar.onclick = cerrarModal;
+
+            // Cerrar al hacer clic fuera del modal
+            modal.onclick = function (e) {
+                if (e.target === modal) {
+                    cerrarModal();
+                }
+            };
+
+            // Cerrar con tecla ESC
+            document.onkeydown = function (e) {
+                if (e.key === 'Escape' && modal.style.display === 'block') {
+                    cerrarModal();
+                }
+            };
+        });
+        
         $(document).ready(function () {
             var datosEventos = <?php echo json_encode($eventos_js); ?>;
             console.log("Datos cargados:", datosEventos);
@@ -94,19 +209,19 @@ while ($row = $res->fetch_assoc()) {
                 },
                 locale: 'es',
                 defaultView: 'agendaWeek',
-                slotDuration: '00:30:00', // CAMBIO: Slots de 30 minutos
+                slotDuration: '00:30:00',
                 slotLabelFormat: 'H:mm',
                 allDaySlot: false,
                 slotEventOverlap: false,
                 weekends: true,
-                minTime: "00:00:00", // CAMBIO: Mostrar desde media noche
-                maxTime: "24:00:00", // CAMBIO: Mostrar hasta media noche siguiente
+                minTime: "00:00:00",
+                maxTime: "24:00:00",
                 eventLimit: true,
                 navLinks: true,
                 nowIndicator: true,
                 eventLimitText: "más...",
                 events: datosEventos,
-                scrollTime: '08:00:00', // Hora inicial al cargar
+                scrollTime: '08:00:00',
 
                 // Función para calcular automáticamente minTime y maxTime
                 viewRender: function (view, element) {
@@ -140,10 +255,14 @@ while ($row = $res->fetch_assoc()) {
                         '<small><i class="fas fa-map-marker-alt"></i> ' + event.salon + '</small>' +
                         '</div>'
                     );
+                    
+                    // Agregar clase CSS según el estado
+                    element.addClass('evento-' + event.estado.toLowerCase());
                 },
 
                 eventClick: function (event) {
-                    window.location.href = 'detalle_evento.php?id=' + event.id;
+                    // Mostrar los datos en el modal
+                    mostrarModalEvento(event);
                     return false;
                 },
 
@@ -337,7 +456,6 @@ while ($row = $res->fetch_assoc()) {
         /* Slots de tiempo más pequeños para ver más horas */
         .fc-time-grid .fc-slats td {
             height: 40px !important;
-            /* Reducir altura para ver más horas */
         }
 
         /* Estilo de los eventos */
@@ -528,6 +646,228 @@ while ($row = $res->fetch_assoc()) {
                 justify-content: center;
             }
         }
+
+        /* Estilos para el modal de detalles del evento */
+        .evento-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .evento-modal-content {
+            background-color: #fff;
+            margin: 5% auto;
+            padding: 0;
+            width: 90%;
+            max-width: 600px;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 31, 63, 0.3);
+            animation: slideIn 0.3s ease;
+            overflow: hidden;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .evento-modal-header {
+            background: var(--azul-quito);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid var(--dorado-quito);
+        }
+
+        .evento-modal-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .close-modal {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .close-modal:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(90deg);
+        }
+
+        .evento-modal-body {
+            padding: 30px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .evento-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .info-item {
+            margin-bottom: 15px;
+        }
+
+        .info-item label {
+            display: block;
+            color: var(--azul-quito);
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .info-item .value {
+            font-size: 1.1rem;
+            color: #333;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid var(--azul-claro);
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+        }
+
+        .estado-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Mejoras para el área de observaciones */
+        #modalNotas {
+            min-height: 80px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid var(--dorado-quito);
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            line-height: 1.6;
+        }
+
+        #modalNotas em {
+            color: #95a5a6;
+            font-style: italic;
+        }
+
+        .evento-modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .btn-modal {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+        }
+
+        .btn-editar {
+            background: var(--azul-claro);
+            color: white;
+        }
+
+        .btn-editar:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .btn-eliminar {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-eliminar:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .btn-cerrar {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-cerrar:hover {
+            background: #7f8c8d;
+            transform: translateY(-2px);
+        }
+
+        /* Responsive para el modal */
+        @media (max-width: 768px) {
+            .evento-modal-content {
+                width: 95%;
+                margin: 10% auto;
+            }
+
+            .evento-modal-actions {
+                flex-direction: column;
+            }
+
+            .btn-modal {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .evento-info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 
@@ -660,6 +1000,72 @@ while ($row = $res->fetch_assoc()) {
                         <div style="color: #666; font-size: 0.9rem;">Eventos Este Mes</div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal para detalles del evento -->
+    <div id="eventoModal" class="evento-modal">
+        <div class="evento-modal-content">
+            <div class="evento-modal-header">
+                <h2 id="modalTitle">Detalles del Evento</h2>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="evento-modal-body">
+                <div class="evento-info-grid">
+                    <div class="info-item">
+                        <label><i class="fas fa-calendar-alt"></i> Fecha del Evento</label>
+                        <div class="value" id="modalFecha"></div>
+                    </div>
+                    <div class="info-item">
+                        <label><i class="fas fa-clock"></i> Horario</label>
+                        <div class="value" id="modalHorario"></div>
+                    </div>
+                    <div class="info-item">
+                        <label><i class="fas fa-user"></i> Cliente</label>
+                        <div class="value" id="modalCliente"></div>
+                    </div>
+                    <div class="info-item">
+                        <label><i class="fas fa-users"></i> Asistentes</label>
+                        <div class="value" id="modalAsistentes"></div>
+                    </div>
+                    <div class="info-item">
+                        <label><i class="fas fa-map-marker-alt"></i> Salón</label>
+                        <div class="value" id="modalSalon"></div>
+                    </div>
+                    <div class="info-item">
+                        <label><i class="fas fa-tag"></i> Tipo de Evento</label>
+                        <div class="value" id="modalTipo"></div>
+                    </div>
+                    <div class="info-item">
+                        <label><i class="fas fa-id-badge"></i> Contacto</label>
+                        <div class="value" id="modalContacto"></div>
+                    </div>
+                    <div class="info-item">
+                        <label><i class="fas fa-phone"></i> Teléfono</label>
+                        <div class="value" id="modalTelefono"></div>
+                    </div>
+                    <div class="info-item">
+                        <label><i class="fas fa-info-circle"></i> Estado</label>
+                        <div class="value">
+                            <span class="estado-badge" id="modalEstado"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <label><i class="fas fa-sticky-note"></i> Notas / Observaciones</label>
+                    <div class="value" id="modalNotas"></div>
+                </div>
+            </div>
+            <div class="evento-modal-actions">
+                <button class="btn-modal btn-editar" id="btnEditarEvento">
+                    <i class="fas fa-edit"></i> Editar Evento
+                </button>
+                <button class="btn-modal btn-eliminar" id="btnEliminarEvento">
+                    <i class="fas fa-trash-alt"></i> Eliminar Evento
+                </button>
+                <button class="btn-modal btn-cerrar" id="btnCerrarModal">
+                    <i class="fas fa-times"></i> Cerrar
+                </button>
             </div>
         </div>
     </div>
