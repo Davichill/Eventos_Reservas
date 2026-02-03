@@ -98,6 +98,7 @@ if (isset($_GET['del'])) {
     <title>Gestión de Mesas | GO Quito</title>
     <link rel="stylesheet" href="../css/gestion_menu/gestion_mesas.css">
     <link rel="stylesheet" href="../css/gestion_menu/estilos_admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body>

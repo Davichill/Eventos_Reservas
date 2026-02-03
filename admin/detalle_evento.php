@@ -788,113 +788,6 @@ function getIconMetodoPago($metodo)
                 </div>
             </div>
 
-            <!-- Sección de Pagos -->
-            <div class="pagos-section">
-                <h2 class="section-title"><i class="fas fa-money-check-alt"></i> Gestión de Pagos</h2>
-
-                <!-- Resumen de pagos -->
-                <div class="pagos-resumen">
-                    <div class="pago-card total">
-                        <h3>Total Evento</h3>
-                        <div class="monto"><?= formatMonto($total_evento) ?></div>
-                        <div class="subtitle">Valor total del evento</div>
-                    </div>
-
-                    <div class="pago-card pagado">
-                        <h3>Total Pagado</h3>
-                        <div class="monto"><?= formatMonto($total_pagado_calculado) ?></div>
-                        <div class="subtitle"><?= count($pagos) ?> pago(s) registrado(s)</div>
-                    </div>
-
-                    <div class="pago-card pendiente">
-                        <h3>Saldo Pendiente</h3>
-                        <div class="monto"><?= formatMonto($saldo_pendiente) ?></div>
-                        <div class="subtitle">
-                            <span class="estado-pago-badge"
-                                style="background: <?= getColorEstadoPago($row['estado_pago']) ?>;">
-                                <?= $row['estado_pago'] ?>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Plan de pagos esperado -->
-                <!-- Plan de pagos esperado -->
-                <div class="plan-pagos">
-                    <h4 style="margin-bottom: 15px; color: var(--primary);">Plan de Pagos (50% - 50%)</h4>
-                    <div class="plan-item <?= $primer_deposito ? 'completado' : 'pendiente' ?>">
-                        <div>
-                            <i class="fas <?= $primer_deposito ? 'fa-check-circle' : 'fa-clock' ?>"></i>
-                            <span>Depósito 1 (50%)</span>
-                        </div>
-                        <div>
-                            <?= $primer_deposito ? formatMonto($primer_deposito['monto']) : formatMonto($total_evento * 0.5) ?>
-                        </div>
-                    </div>
-
-                    <div class="plan-item <?= $segundo_deposito ? 'completado' : 'pendiente' ?>">
-                        <div>
-                            <i class="fas <?= $segundo_deposito ? 'fa-check-circle' : 'fa-clock' ?>"></i>
-                            <span>Depósito 2 / Saldo Final (50%)</span>
-                        </div>
-                        <div>
-                            <?= $segundo_deposito ? formatMonto($segundo_deposito['monto']) : formatMonto($total_evento * 0.5) ?>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Lista de pagos registrados -->
-                <div class="pagos-lista">
-                    <h4 style="margin-bottom: 15px; color: var(--primary);">Pagos Registrados</h4>
-
-                    <?php if (count($pagos) > 0): ?>
-                        <?php foreach ($pagos as $pago): ?>
-                            <div class="pago-item <?= strtolower(str_replace(' ', '-', $pago['tipo_pago'])) ?>">
-                                <div class="pago-info">
-                                    <div class="pago-fecha">
-                                        <i class="far fa-calendar"></i>
-                                        <?= date("d/m/Y H:i", strtotime($pago['fecha_pago'])) ?>
-                                        <?php if ($pago['registrado_por_nombre']): ?>
-                                            | Registrado por: <?= htmlspecialchars($pago['registrado_por_nombre']) ?>
-                                        <?php endif; ?>
-                                    </div>
-                                    <div class="pago-tipo">
-                                        <?= $pago['tipo_pago'] ?>
-                                        <span class="pago-metodo">
-                                            <i class="<?= getIconMetodoPago($pago['metodo_pago']) ?>"></i>
-                                            <?= $pago['metodo_pago'] ?>
-                                        </span>
-                                    </div>
-                                    <?php if ($pago['referencia']): ?>
-                                        <div class="pago-referencia">
-                                            Referencia: <?= htmlspecialchars($pago['referencia']) ?>
-                                        </div>
-                                    <?php endif; ?>
-                                    <?php if ($pago['notas']): ?>
-                                        <div class="pago-notas">
-                                            <?= nl2br(htmlspecialchars($pago['notas'])) ?>
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
-                                <div class="pago-monto">
-                                    <?= formatMonto($pago['monto']) ?>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <div class="sin-pagos">
-                            <i class="fas fa-money-bill-wave fa-2x" style="margin-bottom: 15px; opacity: 0.5;"></i>
-                            <p>No hay pagos registrados para este evento.</p>
-                            <?php if ($es_admin_principal): ?>
-                                <a href="registrar_pago.php?id=<?= $row['id'] ?>" class="btn-action btn-pago"
-                                    style="margin-top: 15px;">
-                                    <i class="fas fa-plus"></i> Registrar Primer Pago
-                                </a>
-                            <?php endif; ?>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
 
             <div class="info-container">
                 <div class="info-grid">
@@ -985,6 +878,10 @@ function getIconMetodoPago($metodo)
                             </div>
                         <?php endif; ?>
                     </div>
+
+
+
+
                 </div>
             </div>
 
@@ -996,6 +893,125 @@ function getIconMetodoPago($metodo)
                     </a>
                 </div>
             <?php endif; ?>
+
+            <!-- Sección de Pagos -->
+            <div class="pagos-section">
+                <h2 class="section-title"><i class="fas fa-money-check-alt"></i> Gestión de Pagos</h2>
+
+                <!-- Resumen de pagos -->
+                <div class="pagos-resumen">
+                    <div class="pago-card total">
+                        <h3>Total Evento</h3>
+                        <div class="monto">
+                            <?= formatMonto($total_evento) ?>
+                        </div>
+                        <div class="subtitle">Valor total del evento</div>
+                    </div>
+
+                    <div class="pago-card pagado">
+                        <h3>Total Pagado</h3>
+                        <div class="monto">
+                            <?= formatMonto($total_pagado_calculado) ?>
+                        </div>
+                        <div class="subtitle">
+                            <?= count($pagos) ?> pago(s) registrado(s)
+                        </div>
+                    </div>
+
+                    <div class="pago-card pendiente">
+                        <h3>Saldo Pendiente</h3>
+                        <div class="monto">
+                            <?= formatMonto($saldo_pendiente) ?>
+                        </div>
+                        <div class="subtitle">
+                            <span class="estado-pago-badge"
+                                style="background: <?= getColorEstadoPago($row['estado_pago']) ?>;">
+                                <?= $row['estado_pago'] ?>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Plan de pagos esperado -->
+                <!-- Plan de pagos esperado -->
+                <div class="plan-pagos">
+                    <h4 style="margin-bottom: 15px; color: var(--primary);">Plan de Pagos (50% - 50%)</h4>
+                    <div class="plan-item <?= $primer_deposito ? 'completado' : 'pendiente' ?>">
+                        <div>
+                            <i class="fas <?= $primer_deposito ? 'fa-check-circle' : 'fa-clock' ?>"></i>
+                            <span>Depósito 1 (50%)</span>
+                        </div>
+                        <div>
+                            <?= $primer_deposito ? formatMonto($primer_deposito['monto']) : formatMonto($total_evento * 0.5) ?>
+                        </div>
+                    </div>
+
+                    <div class="plan-item <?= $segundo_deposito ? 'completado' : 'pendiente' ?>">
+                        <div>
+                            <i class="fas <?= $segundo_deposito ? 'fa-check-circle' : 'fa-clock' ?>"></i>
+                            <span>Depósito 2 / Saldo Final (50%)</span>
+                        </div>
+                        <div>
+                            <?= $segundo_deposito ? formatMonto($segundo_deposito['monto']) : formatMonto($total_evento * 0.5) ?>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lista de pagos registrados -->
+                <div class="pagos-lista">
+                    <h4 style="margin-bottom: 15px; color: var(--primary);">Pagos Registrados</h4>
+
+                    <?php if (count($pagos) > 0): ?>
+                        <?php foreach ($pagos as $pago): ?>
+                            <div class="pago-item <?= strtolower(str_replace(' ', '-', $pago['tipo_pago'])) ?>">
+                                <div class="pago-info">
+                                    <div class="pago-fecha">
+                                        <i class="far fa-calendar"></i>
+                                        <?= date("d/m/Y H:i", strtotime($pago['fecha_pago'])) ?>
+                                        <?php if ($pago['registrado_por_nombre']): ?>
+                                            | Registrado por:
+                                            <?= htmlspecialchars($pago['registrado_por_nombre']) ?>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="pago-tipo">
+                                        <?= $pago['tipo_pago'] ?>
+                                        <span class="pago-metodo">
+                                            <i class="<?= getIconMetodoPago($pago['metodo_pago']) ?>"></i>
+                                            <?= $pago['metodo_pago'] ?>
+                                        </span>
+                                    </div>
+                                    <?php if ($pago['referencia']): ?>
+                                        <div class="pago-referencia">
+                                            Referencia:
+                                            <?= htmlspecialchars($pago['referencia']) ?>
+                                        </div>
+                                    <?php endif; ?>
+                                    <?php if ($pago['notas']): ?>
+                                        <div class="pago-notas">
+                                            <?= nl2br(htmlspecialchars($pago['notas'])) ?>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="pago-monto">
+                                    <?= formatMonto($pago['monto']) ?>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div class="sin-pagos">
+                            <i class="fas fa-money-bill-wave fa-2x" style="margin-bottom: 15px; opacity: 0.5;"></i>
+                            <p>No hay pagos registrados para este evento.</p>
+                            <?php if ($es_admin_principal): ?>
+                                <a href="registrar_pago.php?id=<?= $row['id'] ?>" class="btn-action btn-pago"
+                                    style="margin-top: 15px;">
+                                    <i class="fas fa-plus"></i> Registrar Primer Pago
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+
         </div>
     </div>
 

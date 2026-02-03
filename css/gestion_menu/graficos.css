@@ -1,0 +1,513 @@
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+.card-grafico {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    text-align: center;
+    position: relative;
+}
+
+.stats-recaudacion {
+    margin-top: 15px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #001f3f;
+}
+
+/* Filtros para gráficos */
+.filtros-container {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.filtro-btn {
+    padding: 8px 15px;
+    background: #f0f0f0;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.3s;
+}
+
+.filtro-btn.active {
+    background: #3498db;
+    color: white;
+}
+
+.filtro-btn:hover {
+    background: #e0e0e0;
+}
+
+.filtro-btn.active:hover {
+    background: #2980b9;
+}
+
+/* Estilos para el calendario */
+.calendario-container {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    max-width: 415px;
+    margin: 0 auto;
+}
+
+.calendario-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    gap: 5px;
+}
+
+.calendario-titulo-container {
+    flex: 1;
+    text-align: center;
+}
+
+.calendario-mes-titulo {
+    font-weight: bold;
+    font-size: 16px;
+    margin: 0;
+}
+
+.calendario-anio-titulo {
+    font-weight: bold;
+    font-size: 12px;
+    color: #666;
+    margin: 0;
+}
+
+.calendario-botones {
+    display: flex;
+    gap: 4px;
+}
+
+.calendario-btn {
+    padding: 4px 8px;
+    background: #3498db;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 10px;
+    transition: background 0.3s;
+}
+
+.calendario-btn:hover {
+    background: #2980b9;
+}
+
+.calendario-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 3px;
+}
+
+.calendario-nombre-dia {
+    text-align: center;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 3px;
+}
+
+.calendario-dia {
+    border: 1px solid #ddd;
+    height: 50px;
+    border-radius: 4px;
+    padding: 2px;
+    font-size: 8px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: transform 0.2s;
+}
+
+.calendario-dia:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.calendario-numero {
+    font-weight: bold;
+    font-size: 9px;
+    margin-bottom: 2px;
+}
+
+/* EVENTOS */
+.calendario-evento {
+    font-size: 7px;
+    color: #fff;
+    border-radius: 2px;
+    padding: 1px;
+    margin-bottom: 1px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+/* COLORES */
+.calendario-P {
+    background: #f1c40f;
+    color: #000;
+}
+
+/* Pendiente */
+.calendario-C {
+    background: #2ecc71;
+}
+
+/* Confirmada */
+.calendario-X {
+    background: #e74c3c;
+}
+
+/* Cancelada */
+.calendario-F {
+    background: #3498db;
+}
+
+/* Completada */
+
+/* Botón de actualizar */
+.btn-actualizar {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: #27ae60;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 15px;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background 0.3s;
+}
+
+.btn-actualizar:hover {
+    background: #219653;
+}
+
+/* Contenedor del gráfico con contador */
+.grafico-con-contador {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin: 20px 0;
+}
+
+.contador-derecha {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+    min-width: 150px;
+}
+
+.contador-item {
+    padding: 12px 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #3498db;
+    text-align: left;
+    width: 100%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.contador-titulo {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.contador-numero {
+    font-size: 22px;
+    font-weight: bold;
+    color: #001f3f;
+}
+
+.contador-subtitulo {
+    font-size: 11px;
+    color: #888;
+    margin-top: 3px;
+}
+
+/* Contador de eventos para gráfico de línea */
+.contador-linea {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+}
+
+.contador-linea-item {
+    padding: 10px 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    min-width: 120px;
+    border-top: 3px solid #d4af37;
+}
+
+/* Gráfica de ocupación por salones */
+.grafico-ocupacion-salones {
+    margin: 20px 0;
+}
+
+.ocupacion-contadores {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.ocupacion-item {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    border-top: 4px solid;
+    transition: transform 0.3s;
+}
+
+.ocupacion-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.ocupacion-nombre {
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ocupacion-horas {
+    font-size: 20px;
+    font-weight: bold;
+    color: #001f3f;
+    margin-bottom: 5px;
+}
+
+.ocupacion-subtitulo {
+    font-size: 11px;
+    color: #666;
+}
+
+.ocupacion-promedio {
+    font-size: 12px;
+    color: #27ae60;
+    font-weight: 600;
+    margin-top: 5px;
+}
+
+/* Gráfica de días más/menos vendidos */
+.grafico-dias-vendidos {
+    margin: 20px 0;
+}
+
+.dias-vendidos-contadores {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.dias-vendidos-item {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    border-top: 4px solid;
+    transition: transform 0.3s;
+}
+
+.dias-vendidos-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.dias-vendidos-item.mejor {
+    border-top-color: #2ecc71;
+}
+
+.dias-vendidos-item.peor {
+    border-top-color: #e74c3c;
+}
+
+.dias-vendidos-dia {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.dias-vendidos-cantidad {
+    font-size: 22px;
+    font-weight: bold;
+    color: #001f3f;
+    margin-bottom: 5px;
+}
+
+.dias-vendidos-subtitulo {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 8px;
+}
+
+.dias-vendidos-porcentaje {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 12px;
+    display: inline-block;
+}
+
+.porcentaje-positivo {
+    background: #d5f4e6;
+    color: #27ae60;
+}
+
+.porcentaje-negativo {
+    background: #fadbd8;
+    color: #e74c3c;
+}
+
+.ranking-dias {
+    margin-top: 20px;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.ranking-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.2s;
+}
+
+.ranking-item:last-child {
+    border-bottom: none;
+}
+
+.ranking-item:hover {
+    background: #f8f9fa;
+}
+
+.ranking-posicion {
+    font-weight: bold;
+    color: #3498db;
+    min-width: 25px;
+}
+
+.ranking-dia {
+    flex: 1;
+    text-align: left;
+    padding: 0 10px;
+}
+
+.ranking-cantidad {
+    font-weight: 600;
+    color: #001f3f;
+    min-width: 40px;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .calendario-container {
+        grid-column: span 2;
+    }
+
+    .grafico-con-contador {
+        flex-direction: column;
+    }
+
+    .contador-derecha {
+        width: 100%;
+        flex-direction: row;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .contador-item {
+        width: auto;
+        min-width: 140px;
+    }
+
+    .ocupacion-contadores {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    }
+
+    .dias-vendidos-contadores {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .calendario-container {
+        grid-column: span 1;
+    }
+
+    .filtros-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .btn-actualizar {
+        position: relative;
+        top: 0;
+        right: 0;
+        margin-bottom: 15px;
+    }
+
+    .contador-derecha {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .contador-item {
+        width: 100%;
+        max-width: 200px;
+    }
+
+    .contador-linea {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .contador-linea-item {
+        width: 100%;
+        max-width: 200px;
+    }
+
+    .ocupacion-contadores {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 10px;
+    }
+}

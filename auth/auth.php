@@ -90,7 +90,7 @@ if ($resultado->num_rows === 1) {
         // Determinar si es administrador principal
         $_SESSION['es_principal'] = ($usuario['id'] == 1 && $usuario['tipo'] == 'principal');
 
-        header("Location: ../admin/dashboard.php");
+        header("Location: ../admin/pagina_principal.php");
         exit();
     } else {
         echo "<script>alert('Usuario o contraseña incorrectos'); window.location.href='login.php';</script>";

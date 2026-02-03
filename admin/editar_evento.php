@@ -74,8 +74,8 @@ switch($id_tipo_evento_actual) {
                        ORDER BY nombre_plato";
         break;
     case 5: // Almuerzo/Cena
-        $sql_platos = "SELECT id, nombre as nombre_plato, 'Almuerzo/Cena' as categoria, 'menu_almuero_cena' as tabla_origen 
-                       FROM menu_almuero_cena 
+        $sql_platos = "SELECT id, nombre as nombre_plato, 'Almuerzo/Cena' as categoria, 'menu_almuerzo_cena' as tabla_origen 
+                       FROM menu_almuerzo_cena 
                        ORDER BY nombre_plato";
         break;
     case 6: // Coffee Break
@@ -88,8 +88,8 @@ switch($id_tipo_evento_actual) {
         $sql_platos = "SELECT id, nombre as nombre_plato, 'Desayuno' as categoria, 'menu_desayunos' as tabla_origen 
                        FROM menu_desayunos
                        UNION ALL
-                       SELECT id, nombre as nombre_plato, 'Almuerzo/Cena' as categoria, 'menu_almuero_cena' as tabla_origen 
-                       FROM menu_almuero_cena
+                       SELECT id, nombre as nombre_plato, 'Almuerzo/Cena' as categoria, 'menu_almuerzo_cena' as tabla_origen 
+                       FROM menu_almuerzo_cena
                        UNION ALL
                        SELECT id, nombre as nombre_plato,  'Cóctel' as categoria, 'menu_coctel' as tabla_origen 
                        FROM menu_coctel

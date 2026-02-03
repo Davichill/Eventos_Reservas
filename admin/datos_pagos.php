@@ -1,26 +1,57 @@
 <?php
 include '../php/conexion.php';
-header('Content-Type: application/json');
 
-// Consultamos el total que se debería cobrar y lo que ya se ha cobrado
+$filtro = isset($_GET['filtro']) ? $_GET['filtro'] : '7dias';
+
+// Calcular fechas según filtro
+$fechaActual = date('Y-m-d');
+$whereClause = "WHERE estado IN ('Confirmada', 'Completada')";
+
+switch($filtro) {
+    case '7dias':
+        $fechaInicio = date('Y-m-d', strtotime('-7 days'));
+        $whereClause .= " AND fecha_evento >= '$fechaInicio'";
+        break;
+    case '30dias':
+        $fechaInicio = date('Y-m-d', strtotime('-30 days'));
+        $whereClause .= " AND fecha_evento >= '$fechaInicio'";
+        break;
+    case 'todos':
+        // No agregamos filtro de fecha, solo mantenemos el filtro de estado
+        break;
+}
+
+// Consulta SQL - IMPORTANTE: Usar COALESCE para evitar NULL
 $sql = "SELECT 
-            SUM(total_evento) as total_proyectado, 
-            SUM(total_pagado) as total_recaudado 
-        FROM reservas";
+            COALESCE(SUM(total_evento), 0) as total,
+            COALESCE(SUM(total_pagado), 0) as pagado
+        FROM reservas 
+        $whereClause";
 
-$res = $conn->query($sql);
-$datos = $res->fetch_assoc();
+// Para debugging (quitar en producción)
+error_log("Consulta pagos SQL: " . $sql);
 
-// Calculamos el saldo pendiente para el gráfico de pie
-$pendiente = $datos['total_proyectado'] - $datos['total_recaudado'];
+$result = $conn->query($sql);
 
-$respuesta = [
-    "labels" => ["Cobrado", "Pendiente"],
-    "values" => [
-        (float)$datos['total_recaudado'], 
-        (float)($pendiente > 0 ? $pendiente : 0)
-    ],
-    "total" => (float)$datos['total_proyectado']
+if (!$result) {
+    error_log("Error en consulta: " . $conn->error);
+    $total = 0;
+    $pagado = 0;
+} else {
+    $row = $result->fetch_assoc();
+    $total = floatval($row['total']);
+    $pagado = floatval($row['pagado']);
+}
+
+$pendiente = $total - $pagado;
+
+$data = [
+    'labels' => ['Pagado', 'Pendiente'],
+    'values' => [$pagado, $pendiente],
+    'total' => $total,
+    'filtro' => $filtro
 ];
 
-echo json_encode($respuesta);
+header('Content-Type: application/json');
+echo json_encode($data);
+?>
