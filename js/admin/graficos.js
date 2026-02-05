@@ -272,8 +272,8 @@ let chartOcupacion = null;
 let chartDiasVendidos = null;
 let filtroPagosActual = '7dias';
 let filtroEventosActual = '7prox';
-let filtroSalonesActual = '7dias';
-let filtroDiasActual = '7dias';
+let filtroSalonesActual = 'todos';
+let filtroDiasActual = 'todos';
 
 // Variables y funciones para el calendario
 const nombresMeses = [

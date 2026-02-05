@@ -81,12 +81,12 @@
                 <h3><i class="fas fa-chart-bar"></i> Días Más/Menos Vendidos</h3>
 
                 <div class="filtros-container" id="filtros-dias">
-                    <button class="filtro-btn active" onclick="cambiarFiltroDias('7dias')"
+                    <button class="filtro-btn " onclick="cambiarFiltroDias('7dias')"
                         id="filtro-dias-7dias">Últimos 7 días</button>
                     <button class="filtro-btn" onclick="cambiarFiltroDias('30dias')" id="filtro-dias-30dias">Últimos 30
                         días</button>
                     <button class="filtro-btn" onclick="cambiarFiltroDias('mes')" id="filtro-dias-mes">Este mes</button>
-                    <button class="filtro-btn" onclick="cambiarFiltroDias('todos')"
+                    <button class="filtro-btn active" onclick="cambiarFiltroDias('todos')"
                         id="filtro-dias-todos">Todos</button>
                 </div>
 
@@ -112,13 +112,13 @@
                 <h3><i class="fas fa-building"></i> Ocupación por Salones</h3>
 
                 <div class="filtros-container" id="filtros-salones">
-                    <button class="filtro-btn active" onclick="cambiarFiltroSalones('7dias')"
+                    <button class="filtro-btn " onclick="cambiarFiltroSalones('7dias')"
                         id="filtro-salones-7dias">Últimos 7 días</button>
                     <button class="filtro-btn" onclick="cambiarFiltroSalones('30dias')"
                         id="filtro-salones-30dias">Últimos 30 días</button>
                     <button class="filtro-btn" onclick="cambiarFiltroSalones('mes')" id="filtro-salones-mes">Este
                         mes</button>
-                    <button class="filtro-btn" onclick="cambiarFiltroSalones('todos')"
+                    <button class="filtro-btn active" onclick="cambiarFiltroSalones('todos')"
                         id="filtro-salones-todos">Todos</button>
                 </div>
 
@@ -140,13 +140,13 @@
                 <h3><i class="fas fa-money-bill-wave"></i> Ingresos Promedio por Tipo</h3>
 
                 <div class="filtros-container" id="filtros-ingresos">
-                    <button class="filtro-btn active" onclick="cambiarFiltroIngresos('7dias')"
+                    <button class="filtro-btn" onclick="cambiarFiltroIngresos('7dias')"
                         id="filtro-ingresos-7dias">Últimos 7 días</button>
                     <button class="filtro-btn" onclick="cambiarFiltroIngresos('30dias')"
                         id="filtro-ingresos-30dias">Últimos 30 días</button>
                     <button class="filtro-btn" onclick="cambiarFiltroIngresos('mes')" id="filtro-ingresos-mes">Este
                         mes</button>
-                    <button class="filtro-btn" onclick="cambiarFiltroIngresos('todos')"
+                    <button class="filtro-btn active" onclick="cambiarFiltroIngresos('todos')"
                         id="filtro-ingresos-todos">Todos</button>
                 </div>
 

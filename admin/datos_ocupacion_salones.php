@@ -1,7 +1,7 @@
 <?php
 include '../php/conexion.php';
 
-$filtro = isset($_GET['filtro']) ? $_GET['filtro'] : '7dias';
+$filtro = isset($_GET['filtro']) ? $_GET['filtro'] : 'todos';
 
 // Calcular fechas según filtro
 $fechaActual = date('Y-m-d');

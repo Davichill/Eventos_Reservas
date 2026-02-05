@@ -41,9 +41,10 @@ $row = $res->fetch_assoc();
 // Agrega esta variable después de obtener $row
 $id_tipo_evento_actual = $row['id_tipo_evento'];
 
-$sql_menus_actuales = "SELECT id, categoria, nombre_plato 
-                       FROM reserva_detalles_menu 
-                       WHERE id_reserva = $evento_id";
+// Obtener menús actuales con TODOS los campos
+$sql_menus_actuales = "SELECT * FROM reserva_detalles_menu 
+                       WHERE id_reserva = $evento_id 
+                       ORDER BY id";
 $res_menus_actuales = $conn->query($sql_menus_actuales);
 $menus_seleccionados = [];
 $platos_nombres_seleccionados = [];
@@ -51,66 +52,97 @@ $platos_nombres_seleccionados = [];
 if ($res_menus_actuales && $res_menus_actuales->num_rows > 0) {
     while ($menu = $res_menus_actuales->fetch_assoc()) {
         $menus_seleccionados[] = $menu;
-        $platos_nombres_seleccionados[] = $menu['nombre_plato'];
     }
 }
 
-// Obtener todos los platos disponibles
-// Determinar qué tablas de menú corresponden al tipo de evento actual
+// Obtener todos los platos disponibles según el tipo de evento
+$platos_disponibles = [];
+$categorias_platos = [];
+
 switch($id_tipo_evento_actual) {
     case 1: // Desayuno
-        $sql_platos = "SELECT id, nombre as nombre_plato, 'Desayuno' as categoria, 'menu_desayunos' as tabla_origen 
+        $sql_platos = "SELECT id, nombre as nombre_plato,  tipo as categoria, 
+                              '' as subcategoria, 'Desayuno' as tipo_evento, 'menu_desayunos' as tabla_origen 
                        FROM menu_desayunos 
-                       ORDER BY nombre_plato";
+                       ORDER BY tipo, nombre";
         break;
     case 2: // Seminario
-        $sql_platos = "SELECT id, nombre as nombre_plato, 'Seminario' as categoria, 'menu_seminario' as tabla_origen 
+        $sql_platos = "SELECT id, nombre as nombre_plato, tiempo as categoria, 
+                              subcategoria, 'Seminario' as tipo_evento, 'menu_seminario' as tabla_origen 
                        FROM menu_seminario 
-                       ORDER BY nombre_plato";
+                       ORDER BY tiempo, subcategoria, nombre";
         break;
     case 3: // Cóctel
-        $sql_platos = "SELECT id, nombre as nombre_plato, 'Cóctel' as categoria, 'menu_coctel' as tabla_origen 
+        $sql_platos = "SELECT id, nombre as nombre_plato,  categoria, 
+                              subcategoria, 'Cóctel' as tipo_evento, 'menu_coctel' as tabla_origen 
                        FROM menu_coctel 
-                       ORDER BY nombre_plato";
+                       ORDER BY categoria, subcategoria, nombre";
         break;
     case 5: // Almuerzo/Cena
-        $sql_platos = "SELECT id, nombre as nombre_plato, 'Almuerzo/Cena' as categoria, 'menu_almuerzo_cena' as tabla_origen 
+        $sql_platos = "SELECT id, nombre as nombre_plato,  tiempo as categoria, 
+                              subcategoria, 'Almuerzo/Cena' as tipo_evento, 'menu_almuerzo_cena' as tabla_origen 
                        FROM menu_almuerzo_cena 
-                       ORDER BY nombre_plato";
+                       ORDER BY tiempo, subcategoria, nombre";
         break;
     case 6: // Coffee Break
-        $sql_platos = "SELECT id, nombre as nombre_plato,'Coffee Break' as categoria, 'menu_coffee_break' as tabla_origen 
+        $sql_platos = "SELECT id, nombre as nombre_plato,categoria, 
+                              '' as subcategoria, 'Coffee Break' as tipo_evento, 'menu_coffee_break' as tabla_origen 
                        FROM menu_coffee_break 
-                       ORDER BY nombre_plato";
+                       ORDER BY categoria, nombre";
         break;
     default:
         // Si no hay coincidencia, mostrar todos
-        $sql_platos = "SELECT id, nombre as nombre_plato, 'Desayuno' as categoria, 'menu_desayunos' as tabla_origen 
+        $sql_platos = "SELECT id, nombre as nombre_plato, tipo as categoria, 
+                              '' as subcategoria, 'Desayuno' as tipo_evento, 'menu_desayunos' as tabla_origen 
                        FROM menu_desayunos
                        UNION ALL
-                       SELECT id, nombre as nombre_plato, 'Almuerzo/Cena' as categoria, 'menu_almuerzo_cena' as tabla_origen 
+                       SELECT id, nombre as nombre_plato, tiempo as categoria, 
+                              subcategoria, 'Almuerzo/Cena' as tipo_evento, 'menu_almuerzo_cena' as tabla_origen 
                        FROM menu_almuerzo_cena
                        UNION ALL
-                       SELECT id, nombre as nombre_plato,  'Cóctel' as categoria, 'menu_coctel' as tabla_origen 
+                       SELECT id, nombre as nombre_plato, categoria, 
+                              subcategoria, 'Cóctel' as tipo_evento, 'menu_coctel' as tabla_origen 
                        FROM menu_coctel
                        UNION ALL
-                       SELECT id, nombre as nombre_plato, 'Coffee Break' as categoria, 'menu_coffee_break' as tabla_origen 
+                       SELECT id, nombre as nombre_plato, categoria, 
+                              '' as subcategoria, 'Coffee Break' as tipo_evento, 'menu_coffee_break' as tabla_origen 
                        FROM menu_coffee_break
                        UNION ALL
-                       SELECT id, nombre as nombre_plato, 'Seminario' as categoria, 'menu_seminario' as tabla_origen 
+                       SELECT id, nombre as nombre_plato, tiempo as categoria, 
+                              subcategoria, 'Seminario' as tipo_evento, 'menu_seminario' as tabla_origen 
                        FROM menu_seminario
-                       ORDER BY categoria, nombre_plato";
+                       ORDER BY tipo_evento, categoria, subcategoria, nombre_plato";
         break;
 }
 
 $res_platos = $conn->query($sql_platos);
-$platos_disponibles = [];
-$categorias_platos = [];
+$platos_por_id = []; // Para búsqueda rápida por ID
 
 if ($res_platos && $res_platos->num_rows > 0) {
     while ($plato = $res_platos->fetch_assoc()) {
-        $platos_disponibles[] = $plato; // Usamos array indexado en lugar de asociativo por ID
-        $categorias_platos[$plato['categoria']][] = $plato;
+        $platos_disponibles[] = $plato;
+        $platos_por_id[$plato['id']] = $plato;
+        
+        // Organizar por tipo de evento, categoría y subcategoría
+        $tipo_evento = $plato['tipo_evento'];
+        $categoria = $plato['categoria'];
+        $subcategoria = $plato['subcategoria'];
+        
+        if (!isset($categorias_platos[$tipo_evento])) {
+            $categorias_platos[$tipo_evento] = [];
+        }
+        if (!isset($categorias_platos[$tipo_evento][$categoria])) {
+            $categorias_platos[$tipo_evento][$categoria] = [];
+        }
+        
+        if ($subcategoria && $subcategoria != '') {
+            if (!isset($categorias_platos[$tipo_evento][$categoria][$subcategoria])) {
+                $categorias_platos[$tipo_evento][$categoria][$subcategoria] = [];
+            }
+            $categorias_platos[$tipo_evento][$categoria][$subcategoria][] = $plato;
+        } else {
+            $categorias_platos[$tipo_evento][$categoria]['general'][] = $plato;
+        }
     }
 }
 
@@ -169,21 +201,38 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['actualizar'])) {
             // Eliminar menús anteriores
             $conn->query("DELETE FROM reserva_detalles_menu WHERE id_reserva = $evento_id");
             
-            // Insertar nuevos menús
-            $platos_indices = $_POST['platos'] ?? [];
+            // Insertar nuevos menús con todos los campos
+            $platos_ids = $_POST['platos'] ?? [];
+            $cantidades = $_POST['cantidades'] ?? [];
+            $notas_platos = $_POST['notas_platos'] ?? [];
+            $precios_unitarios = $_POST['precios_unitarios'] ?? [];
             
-            foreach ($platos_indices as $index) {
-                $index = intval($index);
-                if ($index >= 0 && $index < count($platos_disponibles)) {
-                    $plato = $platos_disponibles[$index];
-                    $nombre_plato = $conn->real_escape_string($plato['nombre_plato']);
-                    $categoria = $conn->real_escape_string($plato['categoria']);
-                    
-                    // Nota: No podemos almacenar cantidad, notas ni precio en la estructura actual
-                    $sql_menu = "INSERT INTO reserva_detalles_menu 
-                                (id_reserva, categoria, nombre_plato) 
-                                VALUES ($evento_id, '$categoria', '$nombre_plato')";
-                    $conn->query($sql_menu);
+            for ($i = 0; $i < count($platos_ids); $i++) {
+                $plato_id = intval($platos_ids[$i]);
+                $cantidad = isset($cantidades[$i]) ? intval($cantidades[$i]) : 1;
+                $nota_plato = isset($notas_platos[$i]) ? $conn->real_escape_string($notas_platos[$i]) : '';
+                $precio_unitario = isset($precios_unitarios[$i]) ? floatval($precios_unitarios[$i]) : 0;
+                
+                if ($plato_id > 0 && $cantidad > 0) {
+                    // Buscar información completa del plato
+                    if (isset($platos_por_id[$plato_id])) {
+                        $plato_info = $platos_por_id[$plato_id];
+                        
+                        $sql_menu = "INSERT INTO reserva_detalles_menu 
+                                    (id_reserva, categoria, subcategoria, nombre_plato, 
+                                     cantidad, precio_unitario, notas, tipo_evento) 
+                                    VALUES (
+                                        $evento_id, 
+                                        '" . $conn->real_escape_string($plato_info['categoria']) . "',
+                                        '" . $conn->real_escape_string($plato_info['subcategoria']) . "',
+                                        '" . $conn->real_escape_string($plato_info['nombre_plato']) . "',
+                                        $cantidad,
+                                        $precio_unitario,
+                                        '$nota_plato',
+                                        '" . $conn->real_escape_string($plato_info['tipo_evento']) . "'
+                                    )";
+                        $conn->query($sql_menu);
+                    }
                 }
             }
         }
@@ -213,10 +262,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['actualizar'])) {
     } else {
         $error = "Error al actualizar: " . $conn->error;
     }
-} // <-- ESTA ES LA LLAVE QUE FALTABA
+}
 
 // Convertir $platos_disponibles a JSON para JavaScript
 $platos_disponibles_json = json_encode($platos_disponibles);
+$categorias_platos_json = json_encode($categorias_platos);
 ?>
 
 <!DOCTYPE html>
@@ -227,335 +277,85 @@ $platos_disponibles_json = json_encode($platos_disponibles);
     <title>Editar Evento #<?= $evento_id ?> | GO Quito</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/gestion_menu/estilos_admin.css">
+    <link rel="stylesheet" href="../css/gestion_menu/editar_evento.css">
+    
     <style>
-        :root {
-            --primary: #001f3f;
-            --accent: #a68945;
-            --bg: #f4f7f9;
-            --success: #27ae60;
-            --warning: #f39c12;
-        }
-
-        body {
-            background: var(--bg);
-            font-family: 'Segoe UI', sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-
-        .main-content {
-            margin-left: 250px;
-            padding: 30px;
-        }
-
-        @media (max-width: 992px) {
-            .main-content {
-                margin-left: 0;
-                padding: 20px;
-            }
-        }
-
-        .edit-card {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            max-width: 1400px;
-            margin: auto;
-            overflow: hidden;
-        }
-
-        .edit-header {
-            background: linear-gradient(135deg, var(--primary) 0%, #003366 100%);
-            color: white;
-            padding: 25px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .form-container {
-            padding: 40px;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 25px;
-        }
-
-        .form-group {
-            margin-bottom: 25px;
-        }
-
-        .form-group.full {
-            grid-column: span 2;
-        }
-
-        label {
-            display: block;
-            font-weight: 700;
-            margin-bottom: 8px;
-            color: var(--primary);
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        input,
-        select,
-        textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: 0.3s;
-            background: white;
-        }
-
-        input:focus,
-        select:focus,
-        textarea:focus {
-            border-color: var(--accent);
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(166, 137, 69, 0.1);
-        }
-
-        .section-divider {
-            grid-column: span 2;
-            border-bottom: 2px solid #f0f0f0;
-            margin: 30px 0 20px;
-            padding-bottom: 10px;
-            color: var(--accent);
-            font-weight: bold;
-            font-size: 1.1rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .section-divider i {
-            margin-right: 10px;
-        }
-
-        .btn-save {
-            background: var(--accent);
-            color: var(--primary);
-            border: none;
-            padding: 15px 40px;
-            border-radius: 10px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-            font-size: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .btn-save:hover {
-            background: #c19a2d;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(166, 137, 69, 0.3);
-        }
-
-        .btn-cancel {
-            background: #f0f0f0;
-            color: #666;
-            text-decoration: none;
-            padding: 15px 30px;
-            border-radius: 10px;
-            font-weight: bold;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            transition: 0.3s;
-        }
-
-        .btn-cancel:hover {
-            background: #e0e0e0;
-        }
-
-        .time-value-display {
-            font-size: 0.9rem;
-            color: #666;
-            margin-top: 5px;
-            font-style: italic;
-        }
-
-        /* Estilos para la sección de menús */
-        .menu-section {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-
         .menu-item {
-            background: white;
-            border: 2px solid #e0e0e0;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
             border-radius: 8px;
             padding: 15px;
             margin-bottom: 15px;
             display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr;
-            gap: 15px;
-            align-items: center;
-        }
-
-        .menu-item-header {
-            grid-column: span 4;
-            background: #f0f0f0;
-            padding: 10px 15px;
-            border-radius: 6px;
-            margin-bottom: 10px;
-            font-weight: bold;
-            color: var(--primary);
-        }
-
-        .btn-add-menu {
-            background: var(--success);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            margin-top: 10px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-remove-menu {
-            background: #e74c3c;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        /* Selectores de hora */
-        .select-hora {
-            position: relative;
-            width: 100%;
-        }
-
-        .select-hora select {
-            width: 100%;
-            max-width: 300px;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1rem;
-            background-color: white;
-            cursor: pointer;
-        }
-
-        .select-hora select:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(166, 137, 69, 0.1);
-        }
-
-        /* Tabs para diferentes secciones */
-        .tab-container {
-            margin-bottom: 30px;
-        }
-
-        .tab-buttons {
-            display: flex;
+            grid-template-columns: 2fr 1fr 1fr 1fr auto;
             gap: 10px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #f0f0f0;
-            padding-bottom: 10px;
+            align-items: center;
         }
-
-        .tab-btn {
-            background: none;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            color: #666;
-            transition: 0.3s;
+        
+        .menu-item select,
+        .menu-item input,
+        .menu-item textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
         }
-
-        .tab-btn.active {
-            background: var(--primary);
+        
+        .btn-remove-menu {
+            background: #dc3545;
             color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            white-space: nowrap;
         }
-
-        .tab-content {
-            display: none;
+        
+        .btn-remove-menu:hover {
+            background: #c82333;
         }
-
-        .tab-content.active {
-            display: block;
+        
+        .btn-add-menu {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 15px;
         }
-
-        /* Estilos para montos */
-        .monto-input {
-            font-size: 1.2rem;
+        
+        .btn-add-menu:hover {
+            background: #218838;
+        }
+        
+        .menu-subtotal {
             font-weight: bold;
-            color: var(--primary);
+            color: #2c3e50;
         }
-
-        /* Alertas */
-        .alert {
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 25px;
+        
+        .category-header {
+            background: #e3f2fd;
+            padding: 8px 12px;
+            margin: 10px 0 5px 0;
+            border-radius: 4px;
+            font-weight: bold;
+            color: #1565c0;
         }
-
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+        
+        .subcategory-header {
+            background: #f3e5f5;
+            padding: 6px 10px;
+            margin: 5px 0 3px 0;
+            border-radius: 3px;
+            font-weight: bold;
+            color: #7b1fa2;
+            font-size: 0.9em;
         }
-
-        .alert-danger {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .form-group.full {
-                grid-column: span 1;
-            }
-            
-            .section-divider {
-                grid-column: span 1;
-            }
-            
-            .menu-item {
-                grid-template-columns: 1fr;
-                gap: 10px;
-            }
-            
-            .menu-item-header {
-                grid-column: span 1;
-            }
-            
-            .form-container {
-                padding: 20px;
-            }
-            
-            .edit-header {
-                padding: 20px;
-                flex-direction: column;
-                gap: 15px;
-                text-align: center;
-            }
+        
+        .price-display {
+            font-weight: bold;
+            color: #27ae60;
         }
     </style>
 </head>
@@ -596,12 +396,10 @@ $platos_disponibles_json = json_encode($platos_disponibles);
                     <button type="button" class="tab-btn" onclick="showTab('cliente')">
                         <i class="fas fa-user"></i> Datos del Cliente
                     </button>
-                    <button type="button" class="tab-btn" onclick="showTab('pagos')">
-                        <i class="fas fa-money-check-alt"></i> Pagos
-                    </button>
                 </div>
 
                 <form action="" method="POST" class="form-container" onsubmit="return validarFormulario()" id="mainForm">
+                    <input type="hidden" name="total_evento" id="total-evento-input" value="<?= $row['total_evento'] ?>">
                     
                     <!-- TAB 1: INFORMACIÓN GENERAL -->
                     <div id="tab-general" class="tab-content active">
@@ -640,12 +438,7 @@ $platos_disponibles_json = json_encode($platos_disponibles);
                                 </select>
                             </div>
 
-                            <div class="form-group">
-                                <label>Total del Evento</label>
-                                <input type="number" name="total_evento" class="monto-input"
-                                       value="<?= $row['total_evento'] ?>" 
-                                       step="0.01" min="0" placeholder="0.00">
-                            </div>
+
 
                             <div class="section-divider">
                                 <i class="fas fa-hotel"></i> UBICACIÓN Y HORARIO
@@ -759,86 +552,120 @@ $platos_disponibles_json = json_encode($platos_disponibles);
                         </div>
                     </div>
 
-                    <!-- TAB 2: MENÚ DEL EVENTO -->
+                    <!-- TAB 2: MENÚ DEL EVENTO - MEJORADO -->
                     <div id="tab-menu" class="tab-content">
                         <div class="form-grid">
                             <div class="section-divider full">
-                                <i class="fas fa-utensils"></i> MENÚ SELECCIONADO
+                                <i class="fas fa-utensils"></i> MENÚ DEL EVENTO
                             </div>
 
                             <div class="form-group full">
                                 <div id="menu-items-container">
-    <?php if (count($menus_seleccionados) > 0): ?>
-        <?php foreach ($menus_seleccionados as $index => $menu): ?>
-            <div class="menu-item" data-index="<?= $index ?>">
-                <select name="platos[]" class="plato-select" required>
-                    <option value="">Seleccionar plato...</option>
-                    <?php foreach ($categorias_platos as $categoria => $platos_cat): ?>
-                        <optgroup label="<?= htmlspecialchars($categoria) ?>">
-                            <?php foreach ($platos_cat as $plato_index => $plato): ?>
-                                <option value="<?= $plato_index ?>" 
-                                         
-                                        <?= ($plato['nombre_plato'] == $menu['nombre_plato']) ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($plato['nombre_plato']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </optgroup>
-                    <?php endforeach; ?>
-                </select>
-                
-                <!-- Nota: No podemos guardar cantidad en la estructura actual -->
-                <div style="padding: 12px; background: #f0f0f0; border-radius: 6px; text-align: center;">
-                    <i class="fas fa-info-circle"></i> Cantidad no disponible
-                </div>
-                
-                <div style="padding: 12px; background: #f0f0f0; border-radius: 6px; text-align: center;">
-                    <i class="fas fa-info-circle"></i> Notas no disponibles
-                </div>
-                
-                <button type="button" class="btn-remove-menu" onclick="removeMenuItem(this)">
-                    <i class="fas fa-trash"></i> Eliminar
-                </button>
-            </div>
-        <?php endforeach; ?>
-    <?php else: ?>
-        <div class="menu-item" data-index="0">
-            <select name="platos[]" class="plato-select" required>
-                <option value="">Seleccionar plato...</option>
-                <?php foreach ($categorias_platos as $categoria => $platos_cat): ?>
-                    <optgroup label="<?= htmlspecialchars($categoria) ?>">
-                        <?php foreach ($platos_cat as $plato_index => $plato): ?>
-                            <option value="<?= $plato_index ?>" 
-                                    >
-                                <?= htmlspecialchars($plato['nombre_plato']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </optgroup>
-                <?php endforeach; ?>
-            </select>
-            
-            <div style="padding: 12px; background: #f0f0f0; border-radius: 6px; text-align: center;">
-                <i class="fas fa-info-circle"></i> Cantidad no disponible
-            </div>
-            
-            <div style="padding: 12px; background: #f0f0f0; border-radius: 6px; text-align: center;">
-                <i class="fas fa-info-circle"></i> Notas no disponibles
-            </div>
-            
-            <button type="button" class="btn-remove-menu" onclick="removeMenuItem(this)">
-                <i class="fas fa-trash"></i> Eliminar
-            </button>
-        </div>
-    <?php endif; ?>
-</div>
+                                    <?php if (count($menus_seleccionados) > 0): ?>
+                                        <?php foreach ($menus_seleccionados as $index => $menu): ?>
+                                            <div class="menu-item" data-index="<?= $index ?>">
+                                                <select name="platos[]" class="plato-select" required 
+                                                        onchange="updatePlatoInfo(this, <?= $index ?>)">
+                                                    <option value="">Seleccionar plato...</option>
+                                                    <?php 
+                                                    // Generar opciones agrupadas
+                                                    foreach ($categorias_platos as $tipo_evento => $categorias): 
+                                                        foreach ($categorias as $categoria => $subcategorias):
+                                                            // Para Coffee Break que no tiene subcategorías
+                                                            if ($tipo_evento == 'Coffee Break' || $tipo_evento == 'Desayuno'): ?>
+                                                                <optgroup label="<?= htmlspecialchars($tipo_evento) ?> - <?= htmlspecialchars($categoria) ?>">
+                                                                    <?php foreach ($subcategorias['general'] ?? [] as $plato): ?>
+                                                                        <option value="<?= $plato['id'] ?>" 
+                                                                                data-precio="<?= $plato['precio'] ?>"
+                                                                                data-categoria="<?= htmlspecialchars($plato['categoria']) ?>"
+                                                                                data-subcategoria="<?= htmlspecialchars($plato['subcategoria']) ?>"
+                                                                                data-tipo-evento="<?= htmlspecialchars($plato['tipo_evento']) ?>"
+                                                                                <?= ($plato['nombre_plato'] == $menu['nombre_plato']) ? 'selected' : '' ?>>
+                                                                            <?= htmlspecialchars($plato['nombre_plato']) ?> - $<?= number_format($plato['precio'], 2) ?>
+                                                                        </option>
+                                                                    <?php endforeach; ?>
+                                                                </optgroup>
+                                                            <?php else: 
+                                                                // Para eventos con subcategorías
+                                                                foreach ($subcategorias as $subcategoria => $platos_sub): ?>
+                                                                    <optgroup label="<?= htmlspecialchars($tipo_evento) ?> - <?= htmlspecialchars($categoria) ?> - <?= htmlspecialchars($subcategoria) ?>">
+                                                                        <?php foreach ($platos_sub as $plato): ?>
+                                                                            <option value="<?= $plato['id'] ?>" 
+                                                                                    
+                                                                                    data-categoria="<?= htmlspecialchars($plato['categoria']) ?>"
+                                                                                    data-subcategoria="<?= htmlspecialchars($plato['subcategoria']) ?>"
+                                                                                    data-tipo-evento="<?= htmlspecialchars($plato['tipo_evento']) ?>"
+                                                                                    <?= ($plato['nombre_plato'] == $menu['nombre_plato']) ? 'selected' : '' ?>>
+                                                                                <?= htmlspecialchars($plato['nombre_plato']) ?>
+                                                                            </option>
+                                                                        <?php endforeach; ?>
+                                                                    </optgroup>
+                                                                <?php endforeach; 
+                                                            endif;
+                                                        endforeach;
+                                                    endforeach; ?>
+                                                </select>
+                                                
+                                                
+                                                
+                                                <button type="button" class="btn-remove-menu" onclick="removeMenuItem(this)">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <div class="menu-item" data-index="0">
+                                            <select name="platos[]" class="plato-select" required 
+                                                    onchange="updatePlatoInfo(this, 0)">
+                                                <option value="">Seleccionar plato...</option>
+                                                <?php 
+                                                foreach ($categorias_platos as $tipo_evento => $categorias): 
+                                                    foreach ($categorias as $categoria => $subcategorias):
+                                                        if ($tipo_evento == 'Coffee Break' || $tipo_evento == 'Desayuno'): ?>
+                                                            <optgroup label="<?= htmlspecialchars($tipo_evento) ?> - <?= htmlspecialchars($categoria) ?>">
+                                                                <?php foreach ($subcategorias['general'] ?? [] as $plato): ?>
+                                                                    <option value="<?= $plato['id'] ?>" 
+                                                                            data-precio="<?= $plato['precio'] ?>"
+                                                                            data-categoria="<?= htmlspecialchars($plato['categoria']) ?>"
+                                                                            data-subcategoria="<?= htmlspecialchars($plato['subcategoria']) ?>"
+                                                                            data-tipo-evento="<?= htmlspecialchars($plato['tipo_evento']) ?>">
+                                                                        <?= htmlspecialchars($plato['nombre_plato']) ?> - $<?= number_format($plato['precio'], 2) ?>
+                                                                    </option>
+                                                                <?php endforeach; ?>
+                                                            </optgroup>
+                                                        <?php else: 
+                                                            foreach ($subcategorias as $subcategoria => $platos_sub): ?>
+                                                                <optgroup label="<?= htmlspecialchars($tipo_evento) ?> - <?= htmlspecialchars($categoria) ?> - <?= htmlspecialchars($subcategoria) ?>">
+                                                                    <?php foreach ($platos_sub as $plato): ?>
+                                                                        <option value="<?= $plato['id'] ?>" 
+                                                                                data-precio="<?= $plato['precio'] ?>"
+                                                                                data-categoria="<?= htmlspecialchars($plato['categoria']) ?>"
+                                                                                data-subcategoria="<?= htmlspecialchars($plato['subcategoria']) ?>"
+                                                                                data-tipo-evento="<?= htmlspecialchars($plato['tipo_evento']) ?>">
+                                                                            <?= htmlspecialchars($plato['nombre_plato']) ?> - $<?= number_format($plato['precio'], 2) ?>
+                                                                        </option>
+                                                                    <?php endforeach; ?>
+                                                                </optgroup>
+                                                            <?php endforeach; 
+                                                        endif;
+                                                    endforeach;
+                                                endforeach; ?>
+                                            </select>
+                                            
+                                            
+                                            
+                                            <button type="button" class="btn-remove-menu" onclick="removeMenuItem(this)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
                                 
                                 <button type="button" class="btn-add-menu" onclick="addMenuItem()">
                                     <i class="fas fa-plus"></i> Agregar Plato
                                 </button>
                                 
-                                <div style="margin-top: 20px; padding: 15px; background: #e8f4fd; border-radius: 8px;">
-                                    <strong>Total estimado del menú:</strong> 
-                                    <span id="total-menu">$0.00</span>
-                                </div>
+                               
                             </div>
                         </div>
                     </div>
@@ -900,24 +727,6 @@ $platos_disponibles_json = json_encode($platos_disponibles);
                         </div>
                     </div>
 
-                    <!-- TAB 4: PAGOS -->
-                    <div id="tab-pagos" class="tab-content">
-                        <div class="form-grid">
-                            <div class="section-divider full">
-                                <i class="fas fa-money-check-alt"></i> INFORMACIÓN DE PAGOS
-                            </div>
-
-                            <div class="form-group full" style="text-align: center; padding: 40px;">
-                                <i class="fas fa-external-link-alt fa-3x" style="color: var(--accent); margin-bottom: 20px;"></i>
-                                <h3 style="color: var(--primary);">Gestión de Pagos</h3>
-                                <p>La gestión de pagos se realiza desde la página de detalle del evento.</p>
-                                <a href="detalle_evento.php?id=<?= $evento_id ?>" class="btn-save" style="margin-top: 20px;">
-                                    <i class="fas fa-external-link-alt"></i> Ir a Gestión de Pagos
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-
                     <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #f0f0f0; display: flex; gap: 15px; justify-content: flex-end;">
                         <a href="detalle_evento.php?id=<?= $evento_id ?>" class="btn-cancel">
                             <i class="fas fa-times"></i> Cancelar
@@ -930,177 +739,26 @@ $platos_disponibles_json = json_encode($platos_disponibles);
             </div>
         </div>
     </div>
+    <!-- ... resto del HTML ... -->
 
-    <script>
-        // Pasar los platos disponibles a JavaScript
-        const platosDisponibles = <?= $platos_disponibles_json ?>;
+<script src="../js/admin/editar_evento.js"></script>
+<script>
+    // Inicializar el script con los datos necesarios
+    document.addEventListener('DOMContentLoaded', function () {
+        // Pasar datos desde PHP a JavaScript
+        window.platosDisponibles = <?= $platos_disponibles_json ?>;
+        window.categoriasPlatos = <?= $categorias_platos_json ?>;
+        window.eventoHoraInicio = '<?= $row['hora_inicio'] ?>';
+        window.eventoHoraFin = '<?= $row['hora_fin'] ?>';
+        window.eventoId = <?= $evento_id ?>;
         
-        document.addEventListener('DOMContentLoaded', function () {
-            // ... (resto del código JavaScript permanece igual) ...
-        });
-
-        // Funciones para los tabs
-        function showTab(tabName) {
-            // Ocultar todos los tabs
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // Mostrar el tab seleccionado
-            document.getElementById(`tab-${tabName}`).classList.add('active');
-            
-            // Actualizar botones del tab
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            document.querySelector(`.tab-btn[onclick="showTab('${tabName}')"]`).classList.add('active');
+        // Inicializar las funciones
+        if (typeof initializeEventoEditor === 'function') {
+            initializeEventoEditor();
         }
-
-        // Funciones para la gestión de menús
-        function addMenuItem() {
-            const container = document.getElementById('menu-items-container');
-            const items = container.querySelectorAll('.menu-item');
-            const newIndex = items.length;
-            
-            const newItem = document.createElement('div');
-            newItem.className = 'menu-item';
-            newItem.setAttribute('data-index', newIndex);
-            
-            // Crear el HTML del select con las opciones dinámicas
-            let selectHTML = '<select name="platos[]" class="plato-select" required onchange="calculateTotal()">';
-            selectHTML += '<option value="">Seleccionar plato...</option>';
-            
-            // Agrupar por categoría
-            const categoriasAgrupadas = {};
-            platosDisponibles.forEach((plato, index) => {
-                if (!categoriasAgrupadas[plato.categoria]) {
-                    categoriasAgrupadas[plato.categoria] = [];
-                }
-                categoriasAgrupadas[plato.categoria].push({...plato, originalIndex: index});
-            });
-            
-            // Generar optgroups
-            for (const [categoria, platos] of Object.entries(categoriasAgrupadas)) {
-                selectHTML += `<optgroup label="${categoria}">`;
-                platos.forEach(plato => {
-                    selectHTML += `<option value="${plato.originalIndex}" data-precio="${plato.precio}">`;
-                    selectHTML += `${plato.nombre_plato} - $${parseFloat(plato.precio).toFixed(2)}`;
-                    selectHTML += `</option>`;
-                });
-                selectHTML += `</optgroup>`;
-            }
-            
-            selectHTML += '</select>';
-            
-            newItem.innerHTML = selectHTML + 
-                `<div style="padding: 12px; background: #f0f0f0; border-radius: 6px; text-align: center;">
-                    <i class="fas fa-info-circle"></i> Cantidad no disponible
-                </div>
-                <div style="padding: 12px; background: #f0f0f0; border-radius: 6px; text-align: center;">
-                    <i class="fas fa-info-circle"></i> Notas no disponibles
-                </div>
-                <button type="button" class="btn-remove-menu" onclick="removeMenuItem(this)">
-                    <i class="fas fa-trash"></i> Eliminar
-                </button>`;
-            
-            container.appendChild(newItem);
-            calculateTotal();
-        }
-
-        function removeMenuItem(button) {
-            const container = document.getElementById('menu-items-container');
-            const items = container.querySelectorAll('.menu-item');
-            
-            if (items.length > 1) {
-                const item = button.closest('.menu-item');
-                item.remove();
-                
-                // Reindexar los items
-                container.querySelectorAll('.menu-item').forEach((item, index) => {
-                    item.setAttribute('data-index', index);
-                });
-                
-                calculateTotal();
-            } else {
-                alert('Debe haber al menos un plato en el menú.');
-            }
-        }
-
-        function calculateTotal() {
-            let total = 0;
-            const platoSelects = document.querySelectorAll('.plato-select');
-            
-            platoSelects.forEach(select => {
-                if (select.value && select.selectedOptions[0]) {
-                    const precio = parseFloat(select.selectedOptions[0].dataset.precio) || 0;
-                    // Como no tenemos cantidad, asumimos 1 por defecto
-                    total += precio * 1;
-                }
-            });
-            
-            document.getElementById('total-menu').textContent = '$' + total.toFixed(2);
-            
-            // Actualizar también el total del evento si existe el campo
-            const totalEventoInput = document.querySelector('input[name="total_evento"]');
-            if (totalEventoInput) {
-                totalEventoInput.value = total.toFixed(2);
-            }
-        }
-
-        // Validación del formulario
-        function validarFormulario() {
-            const startSelect = document.getElementById('hora_inicio');
-            const endSelect = document.getElementById('hora_fin');
-            const totalEvento = document.querySelector('input[name="total_evento"]');
-            
-            // Validar horario
-            if (!startSelect.value || !endSelect.value) {
-                alert("Por favor, seleccione tanto la hora de inicio como la de finalización.");
-                return false;
-            }
-
-            const [h1, m1] = startSelect.value.split(':').map(Number);
-            const [h2, m2] = endSelect.value.split(':').map(Number);
-
-            const inicioMins = (h1 * 60) + m1;
-            const finMins = (h2 * 60) + m2;
-
-            if (finMins <= inicioMins) {
-                alert("La hora de finalización debe ser mayor a la hora de inicio.");
-                return false;
-            }
-
-            if ((finMins - inicioMins) < 30) {
-                alert("La duración mínima del evento debe ser de 30 minutos.");
-                return false;
-            }
-
-            // Validar que haya al menos un plato en el menú
-            const platoSelects = document.querySelectorAll('.plato-select');
-            let hasAtLeastOnePlato = false;
-            platoSelects.forEach(select => {
-                if (select.value) hasAtLeastOnePlato = true;
-            });
-            
-            if (!hasAtLeastOnePlato) {
-                alert("Debe seleccionar al menos un plato para el menú.");
-                return false;
-            }
-
-            // Validar total del evento
-            if (totalEvento && parseFloat(totalEvento.value) < 0) {
-                alert("El total del evento no puede ser negativo.");
-                return false;
-            }
-
-            return true;
-        }
-
-        // Calcular total inicial
-        setTimeout(() => {
-            calculateTotal();
-        }, 100);
-    </script>
+    });
+</script>
+</body>
+</html>
 </body>
 </html>
